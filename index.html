@@ -61,7 +61,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2.5px sol
 
 /* header */
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 4px}
-.mark{margin:0;font-family:var(--font-util);font-style:italic;font-weight:700;font-size:29px;line-height:1;letter-spacing:.005em;white-space:nowrap}
+.mark{margin:0;font-family:var(--font-util);font-style:italic;font-weight:700;font-size:29px;line-height:1;letter-spacing:.005em;white-space:nowrap;touch-action:manipulation;-webkit-touch-callout:none;user-select:none}
 .mark span{color:var(--sky)}
 .seg{display:flex;border:1.5px solid var(--rule);border-radius:999px;padding:2px;flex:none}
 .seg button{border:0;background:none;font-size:13.5px;font-weight:500;color:var(--muted);padding:7px 11px;border-radius:999px}
@@ -232,6 +232,29 @@ h2.plain{font-family:var(--font-display);font-weight:400;font-size:24px;margin:0
 .lv i.on{background:var(--sky)}
 .empty{color:var(--muted);text-align:center;padding:30px 10px}
 
+/* private analytics, opened with a long press on the title */
+.admin-body{flex:1;overflow-y:auto;overscroll-behavior:contain;min-height:0;padding-bottom:28px}
+.ranges{display:flex;gap:6px;padding-bottom:12px}
+.ranges button{flex:1;border:1.5px solid var(--rule);background:var(--paper);border-radius:999px;padding:8px 10px;font-size:14px;font-weight:600}
+.ranges button[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft);color:var(--sky-deep)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.stat{border:1.5px solid var(--rule);border-radius:16px;padding:12px 14px}
+.stat span{display:block;color:var(--muted);font-size:13px}
+.stat b{font-family:var(--font-util);font-size:34px;line-height:1.1;color:var(--sky-deep);font-variant-numeric:tabular-nums}
+.bars{display:flex;align-items:flex-end;gap:3px;height:128px;padding-top:8px}
+.bars i{flex:1;background:var(--sky);border-radius:4px 4px 0 0;min-height:2px}
+.bar-cap{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:4px}
+.rank-title{font-family:var(--font-display);font-size:22px;font-weight:400;margin:18px 0 4px}
+.rank{display:flex;align-items:center;gap:10px;border-bottom:1.5px solid var(--rule);padding:9px 0}
+.rank em{flex:none;font-style:normal;color:var(--muted);width:1.4em;font-variant-numeric:tabular-nums}
+.rank span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank b{font-family:var(--font-util);font-size:18px;color:var(--sky-deep);font-variant-numeric:tabular-nums}
+.gate{display:grid;gap:10px;padding-top:12px}
+.gate p{margin:0;color:var(--muted)}
+.gate input{border:1.5px solid var(--rule);border-radius:12px;font:inherit;font-size:16px;padding:12px 14px;width:100%}
+.gate input:focus{outline:none;border-color:var(--sky)}
+.leave{margin-inline-start:auto;border:0;background:none;color:var(--muted);font-size:14px;min-height:44px}
+
 /* toast */
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);border-radius:12px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:14px;z-index:40;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(13,38,56,.25)}
 .toast button{border:0;background:none;color:var(--sky-mid);font-weight:600;padding:4px 6px}
@@ -307,6 +330,17 @@ h2.plain{font-family:var(--font-display);font-weight:400;font-size:24px;margin:0
     <label class="search" for="q"><span id="qIcon"></span><input id="q" type="search" placeholder="חיפוש לפי תרגיל או שריר" autocomplete="off"></label>
     <div class="cats" id="cats"></div>
     <div class="clist" id="clist"></div>
+  </div>
+</div>
+
+<div class="panel" id="admin" role="dialog" aria-modal="true" aria-labelledby="adminTitle" dir="rtl" lang="he" hidden>
+  <div class="panel-in">
+    <div class="panel-head">
+      <button type="button" class="back" id="adminClose" aria-label="חזרה למסך הראשי"></button>
+      <h2 id="adminTitle">כניסות</h2>
+      <button type="button" class="leave" id="adminLeave" hidden>יציאה</button>
+    </div>
+    <div class="admin-body" id="adminBody"></div>
   </div>
 </div>
 
@@ -1646,6 +1680,129 @@ if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWo
   addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();deferred=ev;txt.textContent='אפשר להתקין את Keeping Fit על הטלפון ולפתוח אותה כמו אפליקציה, גם בלי אינטרנט.';box.hidden=false});
   go.onclick=async()=>{if(!deferred) return hide();deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;hide()};
   addEventListener('appinstalled',hide);
+})();
+</script>
+<script>
+/* Private visit screen. Long-press the Keeping Fit title, or open #admin.
+   The password stays on this phone. The Cloudflare token stays on the worker. */
+const $=s=>document.querySelector(s);
+const ANALYTICS_URL='https://keeping-fit-analytics.salvinorinab.workers.dev';
+const AKEY='kf.adminKey';
+const COUNTRY={IL:'ישראל',US:'ארצות הברית',GB:'בריטניה',UK:'בריטניה',DE:'גרמניה',FR:'צרפת',RU:'רוסיה',UA:'אוקראינה',CA:'קנדה',AU:'אוסטרליה',NL:'הולנד',ES:'ספרד',IT:'איטליה',BR:'ברזיל',IN:'הודו',TR:'טורקיה',PL:'פולין',RO:'רומניה',GR:'יוון',CY:'קפריסין',AE:'איחוד האמירויות',AR:'ארגנטינה',MX:'מקסיקו',SE:'שוודיה',NO:'נורווגיה',CH:'שווייץ',AT:'אוסטריה',BE:'בלגיה',ZA:'דרום אפריקה',JP:'יפן',KR:'קוריאה',CN:'סין'};
+const DEVICE={desktop:'מחשב',mobile:'טלפון',tablet:'טאבלט',other:'אחר',unknown:'לא ידוע'};
+const place=code=>{
+  if(!code) return 'לא ידוע';
+  const key=String(code).toUpperCase();
+  return COUNTRY[key]||COUNTRY[code]||code;
+};
+const deviceName=v=>DEVICE[String(v||'').toLowerCase()]||v||'לא ידוע';
+const num=n=>Number(n||0).toLocaleString('he-IL');
+const dayLabel=iso=>{
+  const p=String(iso||'').slice(0,10).split('-');
+  return p.length===3?`${+p[2]}.${+p[1]}`:iso;
+};
+function adminKey(){try{return localStorage.getItem(AKEY)||''}catch(e){return ''}}
+function setAdminKey(v){try{if(v) localStorage.setItem(AKEY,v); else localStorage.removeItem(AKEY)}catch(e){}}
+
+const admin=$('#admin'), adminBody=$('#adminBody');
+let adminDays=7;
+$('#adminClose').innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>חזרה</span>';
+$('#adminClose').onclick=()=>{admin.hidden=true;if(location.hash==='#admin') history.replaceState(null,'',location.pathname+location.search)};
+$('#adminLeave').onclick=()=>{setAdminKey('');renderAdmin()};
+
+function openAdmin(){admin.hidden=false;renderAdmin()}
+function renderAdmin(){
+  const key=adminKey();
+  $('#adminLeave').hidden=!key;
+  if(!key){
+    adminBody.innerHTML=`<form class="gate" id="adminGate">
+      <p>מסך פרטי. הכניסות מגיעות מ-Cloudflare, ורק עם הסיסמה.</p>
+      <input id="adminPass" type="password" autocomplete="current-password" placeholder="סיסמה" enterkeyhint="go">
+      <button type="submit" class="primary">כניסה</button>
+      <p id="adminGateErr" class="small" hidden>הסיסמה לא נכונה.</p>
+    </form>`;
+    $('#adminGate').onsubmit=ev=>{
+      ev.preventDefault();
+      setAdminKey($('#adminPass').value.trim());
+      renderAdmin();
+    };
+    return;
+  }
+  adminBody.innerHTML=`<div class="ranges" id="adminRanges">
+      <button type="button" data-days="1" aria-pressed="${adminDays===1}">היום</button>
+      <button type="button" data-days="7" aria-pressed="${adminDays===7}">7 ימים</button>
+      <button type="button" data-days="30" aria-pressed="${adminDays===30}">30 יום</button>
+    </div>
+    <p class="small">טוען מ-Cloudflare…</p>`;
+  $('#adminRanges').onclick=ev=>{
+    const b=ev.target.closest('[data-days]'); if(!b) return;
+    adminDays=+b.dataset.days; renderAdmin();
+  };
+  loadAdmin(key);
+}
+function fillDays(rows, since, until){
+  const map=new Map(rows.map(r=>[String(r.date).slice(0,10), r]));
+  const out=[];
+  const start=new Date(since+'T00:00:00Z');
+  const end=new Date(until+'T00:00:00Z');
+  for(let t=start.getTime(); t<=end.getTime(); t+=86400000){
+    const iso=new Date(t).toISOString().slice(0,10);
+    out.push(map.get(iso)||{date:iso,views:0,visits:0});
+  }
+  return out;
+}
+function rankList(title, rows, label){
+  if(!rows.length) return '';
+  const max=Math.max(...rows.map(r=>r.visits||r.views||0),1);
+  return `<h3 class="rank-title">${title}</h3>`+rows.map((r,i)=>{
+    const n=r.visits||r.views||0;
+    return `<div class="rank"><em>${i+1}</em><span>${label(r)}</span><b>${num(n)}</b></div>`;
+  }).join('');
+}
+async function loadAdmin(key){
+  let data;
+  try{
+    const res=await fetch(`${ANALYTICS_URL}/?days=${adminDays}`,{headers:{'X-Admin-Key':key},cache:'no-store'});
+    data=await res.json();
+    if(res.status===401){setAdminKey('');renderAdmin();const err=$('#adminGateErr'); if(err) err.hidden=false; return}
+    if(!res.ok||!data.ok) throw new Error('bad');
+  }catch(e){
+    const ranges=adminBody.querySelector('.ranges');
+    adminBody.innerHTML=(ranges?ranges.outerHTML:'')+'<p class="empty">לא הצלחתי להביא את הנתונים מ-Cloudflare. נסה שוב בעוד רגע.</p>';
+    const box=adminBody.querySelector('.ranges');
+    if(box) box.onclick=ev=>{const b=ev.target.closest('[data-days]'); if(!b) return; adminDays=+b.dataset.days; renderAdmin()};
+    return;
+  }
+  const days=fillDays(data.byDay||[], data.since, data.until);
+  const max=Math.max(...days.map(d=>d.visits||0),1);
+  const bars=days.map(d=>`<i style="height:${Math.max(2,Math.round(((d.visits||0)/max)*100))}%" title="${dayLabel(d.date)}: ${d.visits||0}"></i>`).join('');
+  adminBody.innerHTML=`<div class="ranges" id="adminRanges">
+      <button type="button" data-days="1" aria-pressed="${adminDays===1}">היום</button>
+      <button type="button" data-days="7" aria-pressed="${adminDays===7}">7 ימים</button>
+      <button type="button" data-days="30" aria-pressed="${adminDays===30}">30 יום</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>כניסות</span><b>${num(data.visits)}</b></div>
+      <div class="stat"><span>צפיות</span><b>${num(data.views)}</b></div>
+    </div>
+    <div class="bars" aria-hidden="true">${bars}</div>
+    <div class="bar-cap"><span>${dayLabel(data.since)}</span><span>${dayLabel(data.until)}</span></div>
+    ${rankList('מדינות', data.countries||[], r=>place(r.countryName))}
+    ${rankList('מכשירים', data.devices||[], r=>deviceName(r.deviceType))}
+    ${rankList('דפים', data.paths||[], r=>r.requestPath||'/')}
+    ${rankList('מאיפה הגיעו', data.referers||[], r=>r.refererHost||'כניסה ישירה')}
+    <p class="small">${(data.visits||data.views)?'המספרים מגיעים מ-Cloudflare. כניסה חדשה יכולה להופיע אחרי כמה דקות.':'עדיין אין כניסות בטווח הזה. הן נספרות מכאן והלאה, וכניסה חדשה יכולה להופיע אחרי כמה דקות.'}</p>`;
+  $('#adminRanges').onclick=ev=>{const b=ev.target.closest('[data-days]'); if(!b) return; adminDays=+b.dataset.days; renderAdmin()};
+}
+(function bindAdmin(){
+  const mark=document.querySelector('.mark');
+  let timer=0;
+  mark.addEventListener('pointerdown',()=>{timer=setTimeout(openAdmin,700)});
+  mark.addEventListener('pointerup',()=>clearTimeout(timer));
+  mark.addEventListener('pointercancel',()=>clearTimeout(timer));
+  mark.addEventListener('contextmenu',ev=>ev.preventDefault());
+  if(location.hash==='#admin') openAdmin();
+  addEventListener('hashchange',()=>{if(location.hash==='#admin') openAdmin()});
 })();
 </script>
 <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "04b2d73f6c774d07a660a12feb4fc9f1"}'></script><!-- End Cloudflare Web Analytics -->

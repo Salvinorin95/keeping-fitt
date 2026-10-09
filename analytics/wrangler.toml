@@ -1,0 +1,10 @@
+name = "keeping-fit-analytics"
+main = "worker.js"
+compatibility_date = "2026-10-09"
+workers_dev = true
+
+# ACCOUNT_TAG and SITE_TAG identify the account and the Web Analytics
+# property. The API token and the admin password are secrets, not vars.
+[vars]
+ACCOUNT_TAG = "f40038bf18863f4eec89f29d0c46a1ab"
+SITE_TAG = "04b2d73f6c774d07a660a12feb4fc9f1"
