@@ -1,0 +1,10 @@
+// Keeping Fit on Cloudflare: the app is plain static files served from this folder.
+// .assetsignore keeps the repo-only files (git, README, the analytics worker) off the site.
+{
+  "name": "keeping-fit",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "assets": {
+    "directory": "."
+  }
+}

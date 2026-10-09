@@ -1,0 +1,10 @@
+.git
+.gitignore
+.assetsignore
+.wrangler
+.DS_Store
+analytics
+node_modules
+README.md
+wrangler.jsonc
+.cloudflare

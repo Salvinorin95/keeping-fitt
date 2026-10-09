@@ -1,6 +1,7 @@
 // Private reader for Keeping Fit. The public page only sends visits.
 // This worker reads them back with an API token that never ships in the app.
 const ALLOWED = new Set([
+  'https://keeping-fit.salvinorinab.workers.dev',
   'https://salvinorin95.github.io',
   'http://127.0.0.1:8765',
   'http://localhost:8765'

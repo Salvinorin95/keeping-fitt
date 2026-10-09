@@ -1,9 +1,9 @@
 /* Keeping Fit offline support.
    The page itself is fetched from the network first, so a new version shows up on the next open;
    everything else (icons, fonts) is served from the cache once it has been fetched. */
-const VERSION = 'kf-v3';
+const VERSION = 'kf-v4';
 const FONTS = 'kf-fonts';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const SHELL = ['./', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -37,8 +37,8 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req, {cache: 'no-store'})
-        .then((res) => { const copy = res.clone(); caches.open(VERSION).then((c) => c.put('./index.html', copy)); return res; })
-        .catch(() => caches.match('./index.html'))
+        .then((res) => { const copy = res.clone(); caches.open(VERSION).then((c) => c.put('./', copy)); return res; })
+        .catch(() => caches.match('./'))
     );
     return;
   }
