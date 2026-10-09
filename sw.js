@@ -1,7 +1,7 @@
-/* Keeping Fitt offline support.
+/* Keeping Fit offline support.
    The page itself is fetched from the network first, so a new version shows up on the next open;
    everything else (icons, fonts) is served from the cache once it has been fetched. */
-const VERSION = 'kf-v1';
+const VERSION = 'kf-v2';
 const FONTS = 'kf-fonts';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 

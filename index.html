@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Keeping Fitt</title>
-<meta name="description" content="האפליקציה שאומרת לך מה התרגיל הבא בחדר הכושר: 6 הצעות לפי שלב האימון, הסבר לכל תרגיל ומפת שרירים.">
+<title>Keeping Fit</title>
+<meta name="description" content="האפליקציה שאומרת לך מה התרגיל הבא בחדר הכושר: 4 הצעות לפי שלב האימון, הסבר לכל תרגיל ומפת שרירים.">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Keeping Fitt">
+<meta name="apple-mobile-web-app-title" content="Keeping Fit">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Keeping Fitt">
-<meta property="og:description" content="האפליקציה שאומרת לך מה התרגיל הבא בחדר הכושר: 6 הצעות לפי שלב האימון, הסבר לכל תרגיל ומפת שרירים.">
+<meta property="og:title" content="Keeping Fit">
+<meta property="og:description" content="האפליקציה שאומרת לך מה התרגיל הבא בחדר הכושר: 4 הצעות לפי שלב האימון, הסבר לכל תרגיל ומפת שרירים.">
 <meta property="og:url" content="https://salvinorin95.github.io/keeping-fitt/">
 <meta property="og:image" content="https://salvinorin95.github.io/keeping-fitt/og-image.png">
 <meta property="og:locale" content="he_IL">
@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;1,700&family=Fredoka:wght@500;600&family=Rubik:wght@400;500;600&family=Secular+One&display=swap">
 <style>
-/* Layout: built for a phone held in one hand at the gym, like a gym whiteboard. Header, workout chips, the root trail of what you did, a ruled 2x3 board of six moves, thumb dock. */
+/* Layout: built for a phone held in one hand at the gym, like a gym whiteboard. Header, workout chips, the root trail of what you did, a ruled 2x2 board of four moves, thumb dock. */
 :root{
   --paper:#FFFFFF;
   --ink:#0D2638;
@@ -94,19 +94,19 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2.5px sol
 .time{flex:none;margin-inline-start:10px;font-family:var(--font-util);font-size:15px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .hint{font-size:13px;color:var(--muted);white-space:normal}
 
-/* board */
-.board{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));border-block:1.5px solid var(--rule)}
+/* board: four large tiles so the figure and the name own the screen */
+.board{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));border-block:1.5px solid var(--rule)}
 .cell{position:relative;min-width:0;min-height:0}
 .cell:nth-child(odd){border-inline-end:1.5px solid var(--rule)}
-.cell:nth-child(-n+4){border-bottom:1.5px solid var(--rule)}
-.tile{border:0;background:var(--paper);width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:38px 8px 10px;text-align:center;--halo:var(--paper);transition:background-color .15s}
+.cell:nth-child(-n+2){border-bottom:1.5px solid var(--rule)}
+.tile{border:0;background:var(--paper);width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:36px 8px 12px;text-align:center;--halo:var(--paper);transition:background-color .15s}
 .tile:active{background:var(--sky-soft);--halo:var(--sky-soft)}
 .tile:focus-visible{outline-offset:-5px}
 .tile .pic{flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
-.tile .pic svg{height:100%;max-height:128px;width:auto;max-width:100%}
-.tile .nm,.tile .en{flex:none}
-.tile .nm{font-family:var(--font-display);font-size:clamp(15px,4.3vw,18px);line-height:1.2;text-wrap:balance;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tile .en{font-family:var(--font-util);font-weight:500;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tile .pic svg{height:100%;width:auto;max-width:100%;max-height:100%}
+.tile .nm,.tile .en{flex:none;max-width:100%}
+.tile .nm{font-family:var(--font-display);font-size:clamp(22px,6.2vw,28px);line-height:1.15;text-wrap:balance;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tile .en{font-family:var(--font-util);font-weight:500;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .label{position:absolute;top:10px;inset-inline:48px;text-align:center;font-family:var(--font-round);font-weight:600;font-size:16.5px;line-height:24px;color:var(--sky-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 .badge{position:absolute;top:12px;inset-inline-start:7px;font-family:var(--font-round);font-weight:600;font-size:11.5px;line-height:20px;padding:0 7px;border-radius:999px;background:var(--sky-soft);color:var(--sky-deep);pointer-events:none}
 .tick{position:absolute;top:5px;inset-inline-end:5px;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--sky-mid);background:var(--paper);color:var(--sky-deep);display:grid;place-items:center;padding:0}
@@ -278,7 +278,7 @@ h2.plain{font-family:var(--font-display);font-weight:400;font-size:24px;margin:0
 <body>
 <div id="app" dir="rtl" lang="he">
   <header class="top">
-    <h1 class="mark" dir="ltr">Keeping <span>Fitt</span></h1>
+    <h1 class="mark" dir="ltr">Keeping <span>Fit</span></h1>
     <div class="seg" id="level" role="radiogroup" aria-label="רמת המתאמן">
       <button type="button" role="radio" data-lv="0" aria-checked="false">מתחיל</button>
       <button type="button" role="radio" data-lv="1" aria-checked="true">מתקדם</button>
@@ -1012,29 +1012,36 @@ function whyNext(cur,nx){
   return `${did} מתוך ${cur.n}. אפשר כבר לשלב ${nx.mix}.`;
 }
 function suggest(st){
+  const BOARD=4;
   const ctx=ctxOf(st),sid=activeSplit(st),pc={},used=new Set();
   if(!sid){
-    const items=[];
+    const buckets={};
     ['A','B','C'].forEach(k=>{
       const ph0=Object.assign({},SPLITS[k].ph[0],{d:0,i:0});
-      pickFrom(pool(st,ctx,ph0),2,pc,used).forEach(c=>items.push({ex:c.ex,kind:'open',badge:k,
-        reason:`פותח את אימון ${k} (${SPLITS[k].name}). אחרי שתסמן אותו, ההצעות ימשיכו לפי אימון ${k}.`}));
+      buckets[k]=pickFrom(pool(st,ctx,ph0),2,pc,used);
     });
+    const chosen=[];
+    ['A','B','C'].forEach(k=>{const c=buckets[k][0];if(c) chosen.push({k,c})});
+    let best=null;
+    ['A','B','C'].forEach(k=>{const c=buckets[k][1];if(c&&(!best||c.s>best.c.s)) best={k,c}});
+    if(best) chosen.push(best);
+    const items=chosen.slice(0,BOARD).map(({k,c})=>({ex:c.ex,kind:'open',badge:k,
+      reason:`פותח את אימון ${k} (${SPLITS[k].name}). אחרי שתסמן אותו, ההצעות ימשיכו לפי אימון ${k}.`}));
     return {mode:'open',sid:null,phases:[],cur:null,items};
   }
   const phs=phasesOf(st,sid);
   const p=phs.findIndex(x=>x.d<x.n);
   if(p<0){
     const ph={k:[...new Set(phs.flatMap(x=>x.k))],d:2,i:9};
-    const items=pickFrom(pool(st,ctx,ph),6,pc,used).map(c=>({ex:c.ex,kind:'bonus',badge:'בונוס',
+    const items=pickFrom(pool(st,ctx,ph),BOARD,pc,used).map(c=>({ex:c.ex,kind:'bonus',badge:'בונוס',
       reason:'השלמת את כל שלבי האימון. זה תרגיל נוסף, אם נשאר לך כוח.'}));
     return {mode:'complete',sid,phases:phs,cur:null,items};
   }
   const cur=phs[p],n1=phs[p+1],n2=phs[p+2];
   let kN=0;
-  if(n1){kN=Math.round(4.5*cur.d/cur.n);if(cur.i>0) kN=Math.max(kN,2);if(!st.done.length) kN=0}
-  const kN2=(n2&&kN>=3)?1:0;kN-=kN2;
-  const kC=6-kN-kN2;
+  if(n1){kN=Math.round(3*cur.d/cur.n);if(cur.i>0) kN=Math.max(kN,1);if(!st.done.length) kN=0}
+  const kN2=(n2&&kN>=2)?1:0;kN-=kN2;
+  const kC=BOARD-kN-kN2;
   const a=pickFrom(pool(st,ctx,cur),kC,pc,used);
   const b=n1?pickFrom(pool(st,ctx,n1),kN+(kC-a.length),pc,used):[];
   const c=n2?pickFrom(pool(st,ctx,n2),kN2+Math.max(0,kN+(kC-a.length)-b.length),pc,used):[];
@@ -1042,10 +1049,10 @@ function suggest(st){
     ...a.map(x=>({ex:x.ex,kind:'cur',badge:'',reason:whyCur(ctx,x.ex,cur)})),
     ...b.map(x=>({ex:x.ex,kind:'next',badge:'הבא',reason:whyNext(cur,n1)})),
     ...c.map(x=>({ex:x.ex,kind:'next',badge:'הבא',reason:whyNext(cur,n2)}))];
-  if(items.length<6){
+  if(items.length<BOARD){
     const later=phs.slice(p+1);
     const ph={k:[...new Set(later.flatMap(x=>x.k))],d:1,i:1};
-    pickFrom(pool(st,ctx,ph),6-items.length,pc,used).forEach(x=>items.push({ex:x.ex,kind:'next',badge:'הבא',reason:'תרגיל משלב מאוחר יותר באימון.'}));
+    pickFrom(pool(st,ctx,ph),BOARD-items.length,pc,used).forEach(x=>items.push({ex:x.ex,kind:'next',badge:'הבא',reason:'תרגיל משלב מאוחר יותר באימון.'}));
   }
   return {mode:'run',sid,phases:phs,cur,items};
 }
@@ -1394,7 +1401,7 @@ function renderBoard(anim){
     </button>
     <button type="button" class="tick" data-tick="${i}" aria-label="סמן כבוצע: ${it.ex.he}">${ICON.check}</button>
   </div>`).join('');
-  for(let i=items.length;i<6;i++) html+=`<div class="cell"><div class="empty-cell">${i===items.length?'אין עוד הצעות לשלב הזה. פתח את הקטלוג או סיים את האימון.':''}</div></div>`;
+  for(let i=items.length;i<4;i++) html+=`<div class="cell"><div class="empty-cell">${i===items.length?'אין עוד הצעות לשלב הזה. פתח את הקטלוג או סיים את האימון.':''}</div></div>`;
   $('#board').innerHTML=html;
 }
 
@@ -1636,7 +1643,7 @@ if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWo
     setTimeout(()=>{box.hidden=false},2500);return;
   }
   let deferred=null;
-  addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();deferred=ev;txt.textContent='אפשר להתקין את Keeping Fitt על הטלפון ולפתוח אותה כמו אפליקציה, גם בלי אינטרנט.';box.hidden=false});
+  addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();deferred=ev;txt.textContent='אפשר להתקין את Keeping Fit על הטלפון ולפתוח אותה כמו אפליקציה, גם בלי אינטרנט.';box.hidden=false});
   go.onclick=async()=>{if(!deferred) return hide();deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;hide()};
   addEventListener('appinstalled',hide);
 })();
