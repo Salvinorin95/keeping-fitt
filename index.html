@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Keeping Fitt</title>
+<meta name="description" content="האפליקציה שאומרת לך מה התרגיל הבא בחדר הכושר: 6 הצעות לפי שלב האימון, הסבר לכל תרגיל ומפת שרירים.">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Keeping Fitt">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Keeping Fitt">
+<meta property="og:description" content="האפליקציה שאומרת לך מה התרגיל הבא בחדר הכושר: 6 הצעות לפי שלב האימון, הסבר לכל תרגיל ומפת שרירים.">
+<meta property="og:url" content="https://salvinorin95.github.io/keeping-fitt/">
+<meta property="og:image" content="https://salvinorin95.github.io/keeping-fitt/og-image.png">
+<meta property="og:locale" content="he_IL">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;1,700&family=Fredoka:wght@500;600&family=Rubik:wght@400;500;600&family=Secular+One&display=swap">
+<style>
+/* Layout: built for a phone held in one hand at the gym, like a gym whiteboard. Header, workout chips, the root trail of what you did, a ruled 2x3 board of six moves, thumb dock. */
+:root{
+  --paper:#FFFFFF;
+  --ink:#0D2638;
+  --muted:#557081;
+  --sky:#2FA8EE;
+  --sky-deep:#0B6FAD;
+  --sky-mid:#A6D7F6;
+  --sky-soft:#EBF6FE;
+  --gear:#CBE7FA;
+  --rule:#D5E6F1;
+  --scrim:rgba(13,38,56,.38);
+  --on-accent:#FFFFFF;
+  --font-display:'Secular One','Rubik',system-ui,sans-serif;
+  --font-body:'Rubik',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --font-util:'Barlow Condensed','Rubik',system-ui,sans-serif;
+  --font-round:'Fredoka','Rubik',system-ui,sans-serif;
+  --hit:#1E98E3;
+  --hit2:#8CCBF4;
+  --body:#C9D9E5;
+  --body-2:#DCE6EE;
+  color-scheme:light;
+}
+html{height:100%;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;overscroll-behavior:none;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+.tile,.dock,.splits,.seg,.trail,.ex-pic,.row{-webkit-user-select:none;user-select:none}
+.tile,.ex-pic,.row{-webkit-touch-callout:none}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2.5px solid var(--sky-deep);outline-offset:2px}
+
+#app{height:100%;min-height:540px;max-width:480px;margin:0 auto;padding-inline:16px;display:flex;flex-direction:column}
+@media (min-width:520px){#app{border-inline:1.5px solid var(--rule)}}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px 4px}
+.mark{margin:0;font-family:var(--font-util);font-style:italic;font-weight:700;font-size:29px;line-height:1;letter-spacing:.005em;white-space:nowrap}
+.mark span{color:var(--sky)}
+.seg{display:flex;border:1.5px solid var(--rule);border-radius:999px;padding:2px;flex:none}
+.seg button{border:0;background:none;font-size:13.5px;font-weight:500;color:var(--muted);padding:7px 11px;border-radius:999px}
+.seg button[aria-checked="true"]{background:var(--sky-soft);color:var(--sky-deep)}
+
+/* workout chips */
+.splits{display:flex;gap:6px;overflow-x:auto;padding-block:8px 6px;scrollbar-width:none}
+.splits::-webkit-scrollbar{display:none}
+.splits button{flex:none;border:1.5px solid var(--rule);background:var(--paper);border-radius:999px;padding:7px 13px;font-size:13.5px;font-weight:500;white-space:nowrap}
+.splits button b{font-family:var(--font-util);font-size:16px;font-weight:600;margin-inline-end:4px}
+.splits button[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft);color:var(--sky-deep)}
+
+/* trail */
+.trail{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding-block:6px 10px;min-width:0}
+.phases,.path{display:flex;align-items:center;overflow-x:auto;scrollbar-width:none;min-width:0}
+.phases::-webkit-scrollbar,.path::-webkit-scrollbar{display:none}
+.phases{gap:14px;font-size:13px;color:var(--muted);white-space:nowrap;min-height:22px}
+.sid{font-family:var(--font-util);font-weight:600;font-size:15px;color:var(--on-accent);background:var(--sky-deep);border-radius:6px;padding:0 7px;line-height:20px;flex:none}
+.phase{display:flex;align-items:center;gap:5px;flex:none;font-family:var(--font-round);font-weight:500;font-size:14px}
+.phase.now{color:var(--ink);font-weight:600}
+.phase.done{color:var(--sky-deep);font-weight:600}
+.dots{display:flex;gap:3px}
+.dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--sky-mid)}
+.dots i.on{background:var(--sky);border-color:var(--sky)}
+.path{min-height:34px}
+.step{flex:none;display:flex;align-items:center;gap:4px;border:1.5px solid var(--rule);background:var(--paper);border-radius:999px;padding:2px 4px 2px 10px;font-size:12.5px;max-width:170px}
+.step svg{width:26px;height:26px;flex:none}
+.step span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link{flex:none;width:12px;height:2px;background:var(--sky-mid)}
+.time{flex:none;margin-inline-start:10px;font-family:var(--font-util);font-size:15px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.hint{font-size:13px;color:var(--muted);white-space:normal}
+
+/* board */
+.board{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));border-block:1.5px solid var(--rule)}
+.cell{position:relative;min-width:0;min-height:0}
+.cell:nth-child(odd){border-inline-end:1.5px solid var(--rule)}
+.cell:nth-child(-n+4){border-bottom:1.5px solid var(--rule)}
+.tile{border:0;background:var(--paper);width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:38px 8px 10px;text-align:center;--halo:var(--paper);transition:background-color .15s}
+.tile:active{background:var(--sky-soft);--halo:var(--sky-soft)}
+.tile:focus-visible{outline-offset:-5px}
+.tile .pic{flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.tile .pic svg{height:100%;max-height:128px;width:auto;max-width:100%}
+.tile .nm,.tile .en{flex:none}
+.tile .nm{font-family:var(--font-display);font-size:clamp(15px,4.3vw,18px);line-height:1.2;text-wrap:balance;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile .en{font-family:var(--font-util);font-weight:500;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.label{position:absolute;top:10px;inset-inline:48px;text-align:center;font-family:var(--font-round);font-weight:600;font-size:16.5px;line-height:24px;color:var(--sky-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.badge{position:absolute;top:12px;inset-inline-start:7px;font-family:var(--font-round);font-weight:600;font-size:11.5px;line-height:20px;padding:0 7px;border-radius:999px;background:var(--sky-soft);color:var(--sky-deep);pointer-events:none}
+.tick{position:absolute;top:5px;inset-inline-end:5px;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--sky-mid);background:var(--paper);color:var(--sky-deep);display:grid;place-items:center;padding:0}
+.tick svg{width:16px;height:16px}
+.tick:active{background:var(--sky);border-color:var(--sky);color:var(--on-accent)}
+.cell.enter .tile{animation:rise .34s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i)*40ms)}
+@keyframes rise{from{opacity:.2;transform:translateY(10px)}to{opacity:1;transform:none}}
+.empty-cell{display:grid;place-items:center;height:100%;color:var(--muted);font-size:13px;padding:12px;text-align:center}
+
+/* dock */
+.dock{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding-block:10px 12px}
+.ghost{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12.5px;font-weight:500;color:var(--ink);padding:6px 4px}
+.ghost svg{width:22px;height:22px;color:var(--sky-deep)}
+.zap{border:0;background:var(--sky-deep);color:var(--on-accent);border-radius:999px;padding:12px 30px;display:flex;align-items:center;gap:8px;font-size:17px;font-weight:600;box-shadow:0 6px 18px rgba(11,111,173,.25)}
+.zap svg{width:20px;height:20px}
+.zap:active{transform:scale(.97)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;z-index:30}
+.sheet{background:var(--paper);width:100%;max-width:480px;max-height:92%;border-radius:20px 20px 0 0;display:flex;flex-direction:column;box-shadow:0 -12px 40px rgba(13,38,56,.2);animation:up .26s cubic-bezier(.2,.7,.3,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;padding:8px 12px 0 12px;touch-action:none}
+.grip{width:40px;height:4px;border-radius:2px;background:var(--rule);margin-inline-start:calc(50% - 32px)}
+.icon-btn{border:0;background:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.icon-btn svg{width:22px;height:22px}
+.sheet-body{overflow-y:auto;overscroll-behavior:contain;padding:0 20px 18px;min-height:0}
+.sheet-actions{display:flex;gap:10px;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1.5px solid var(--rule)}
+.sheet-actions:empty{display:none}
+.primary,.secondary{flex:1;border-radius:14px;padding:13px 16px;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
+.primary{border:0;background:var(--sky-deep);color:var(--on-accent)}
+.primary svg{width:18px;height:18px}
+.secondary{border:1.5px solid var(--rule);background:var(--paper);color:var(--ink)}
+.note-done{flex:1;text-align:center;color:var(--muted);font-size:14px;align-self:center}
+
+.ex-head{display:flex;gap:16px;align-items:center;padding-block:4px 14px}
+.ex-pic-wrap{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;width:92px}
+.ex-hint{font-size:11px;line-height:1.3;color:var(--muted);text-align:center}
+.ex-pic{flex:none;width:88px;height:88px;border-radius:18px;background:var(--sky-soft);display:grid;place-items:center;--halo:var(--sky-soft)}
+.ex-pic svg{width:76px;height:76px}
+.map-card{background:var(--sky-soft);border-radius:20px;padding:12px 10px 10px;margin-bottom:10px}
+.map-title{font-family:var(--font-round);font-weight:600;font-size:24px;line-height:1.2;text-align:center;color:var(--sky-deep);margin:0 0 6px}
+.maps{display:flex;justify-content:center;gap:6px}
+.maps figure{margin:0;flex:1;max-width:150px;display:flex;flex-direction:column;align-items:center;min-width:0}
+.maps svg{width:100%;height:auto;max-height:270px;display:block}
+.maps figcaption{font-family:var(--font-round);font-weight:500;font-size:13px;color:var(--muted);margin-top:2px}
+.mapsvg path{stroke:var(--sky-soft);stroke-width:1.1;stroke-linejoin:round}
+.mapsvg .mb{fill:var(--body-2)}.mapsvg .m0{fill:var(--body)}.mapsvg .ms{fill:var(--hit2)}
+.mapsvg .mp{fill:var(--hit);animation:hit .9s ease .1s both}
+@keyframes hit{0%{fill:var(--body)}55%{fill:var(--sky)}100%{fill:var(--hit)}}
+.legend{display:flex;justify-content:center;gap:18px;font-size:13px;margin-top:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-inline-end:6px;vertical-align:-1px}
+.legend .lp{background:var(--hit)}.legend .ls{background:var(--hit2)}
+.ex-title{min-width:0}
+.ex-title h2{font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.15;margin:0;text-wrap:balance}
+.ex-title .en{font-family:var(--font-util);font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:2px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:12px;font-weight:500;border:1.5px solid var(--rule);border-radius:999px;padding:1px 9px;white-space:nowrap}
+.chip.t{border-color:var(--sky-mid);color:var(--sky-deep)}
+.why{background:var(--sky-soft);border-radius:12px;padding:10px 14px;margin:0 0 6px;font-size:14.5px}
+.why b{color:var(--sky-deep);margin-inline-end:4px}
+.sec{padding-block:12px 4px;border-top:1.5px solid var(--rule);margin-top:10px}
+.sec:first-of-type{border-top:0}
+.sec h3,.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--sky-deep);margin:0 0 6px}
+.sec ol,.sec ul{margin:0;padding-inline-start:20px;display:grid;gap:4px}
+.sec li{max-width:65ch}
+.sec li::marker{color:var(--sky-deep);font-weight:600}
+.err li::marker{color:var(--muted)}
+.mus{display:flex;flex-wrap:wrap;gap:6px}
+.m1,.m2{font-size:13.5px;border-radius:8px;padding:3px 10px;border:1.5px solid var(--rule);display:inline-flex;align-items:center;gap:6px}
+.m1{font-weight:500}
+.m2{color:var(--muted)}
+.m1::before,.m2::before{content:'';width:9px;height:9px;border-radius:3px;flex:none}
+.m1::before{background:var(--hit)}.m2::before{background:var(--hit2)}
+.rx{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--rule);border:1.5px solid var(--rule);border-radius:12px;overflow:hidden;margin:0}
+.rx div{background:var(--paper);padding:8px 6px;text-align:center;min-width:0}
+.rx dt{font-size:11.5px;color:var(--muted)}
+.rx dd{margin:0;font-family:var(--font-util);font-size:17px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.small{font-size:12.5px;color:var(--muted);margin:8px 0 0;max-width:65ch}
+details.pro{border:1.5px solid var(--rule);border-radius:12px;padding:10px 14px;margin-top:12px}
+details.pro summary{font-weight:600;color:var(--sky-deep);cursor:pointer}
+details.pro p{margin:8px 0 0;max-width:65ch}
+.alts{display:flex;flex-wrap:wrap;gap:6px}
+.alts button{border:1.5px solid var(--rule);background:var(--paper);border-radius:999px;padding:4px 12px;font-size:13.5px}
+.sum{font-family:var(--font-util);font-size:20px;font-weight:600;color:var(--sky-deep);margin:2px 0 10px}
+.sumlist{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.sumlist li{display:flex;justify-content:space-between;border:1.5px solid var(--rule);border-radius:10px;padding:6px 12px}
+.sumlist b{font-family:var(--font-util);font-size:18px;color:var(--sky-deep)}
+h2.plain{font-family:var(--font-display);font-weight:400;font-size:24px;margin:0}
+
+/* catalog */
+.panel{position:fixed;inset:0;background:var(--paper);z-index:20;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.panel-in{height:100%;max-width:480px;margin:0 auto;padding-inline:16px;display:flex;flex-direction:column}
+.panel-head{display:flex;align-items:center;gap:4px;padding-block:8px 8px}
+.back{border:0;background:none;display:flex;align-items:center;gap:2px;color:var(--sky-deep);font-size:16px;font-weight:500;min-height:44px;padding:0 0 0 10px;margin-inline-start:-6px}
+.back svg{width:24px;height:24px}
+.panel-head h2{font-family:var(--font-display);font-weight:400;font-size:24px;margin:0}
+.search{display:flex;align-items:center;gap:8px;border:1.5px solid var(--rule);border-radius:12px;padding:0 12px}
+.search:focus-within{border-color:var(--sky)}
+.search svg{width:18px;height:18px;color:var(--muted);flex:none}
+.search input{border:0;outline:0;background:none;font:inherit;font-size:16px;color:var(--ink);padding:11px 0;width:100%;min-width:0}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cats button{flex:none;border:1.5px solid var(--rule);background:var(--paper);border-radius:999px;padding:7px 14px;font-family:var(--font-round);font-size:15px;font-weight:500}
+.cats button[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft);color:var(--sky-deep)}
+.clist{flex:1;overflow-y:auto;overscroll-behavior:contain;min-height:0;padding-bottom:24px}
+.info{background:var(--sky-soft);border-radius:14px;padding:14px 16px;margin-bottom:8px}
+.info p{margin:0 0 10px;max-width:65ch}
+.info details{border-top:1.5px solid var(--sky-mid);padding-top:8px}
+.info summary{font-weight:600;color:var(--sky-deep);cursor:pointer}
+.info details p{margin:6px 0 0}
+.cgroup{display:flex;justify-content:center;align-items:center;gap:8px;font-family:var(--font-round);font-weight:600;font-size:22px;color:var(--sky-deep);margin:18px 0 2px;padding-bottom:6px;border-bottom:1.5px solid var(--rule)}
+.cgroup span{font-family:var(--font-round);font-weight:500;font-size:12.5px;color:var(--sky-deep);background:var(--sky-soft);border-radius:999px;padding:0 8px;line-height:20px}
+.rpic{display:flex;flex:none}
+.row{display:flex;align-items:center;gap:12px;width:100%;border:0;border-bottom:1.5px solid var(--rule);background:var(--paper);padding:8px 2px;text-align:start;--halo:var(--paper)}
+.row:active{background:var(--sky-soft);--halo:var(--sky-soft)}
+.row svg{width:48px;height:48px;flex:none}
+.rtx{flex:1;min-width:0;display:flex;flex-direction:column}
+.rtx b{font-weight:600;font-size:15px}
+.rtx small{font-size:12.5px;color:var(--muted)}
+.rtx .en2{font-family:var(--font-util);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.lv{display:flex;gap:3px;flex:none}
+.lv i{width:7px;height:7px;border-radius:50%;background:var(--rule)}
+.lv i.on{background:var(--sky)}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+
+/* toast */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);border-radius:12px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:14px;z-index:40;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(13,38,56,.25)}
+.toast button{border:0;background:none;color:var(--sky-mid);font-weight:600;padding:4px 6px}
+
+/* pictograms */
+.pg{display:block;overflow:visible}
+.pg polyline,.pg line,.pg path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.pg .b{stroke:var(--sky)}
+.pg .f{stroke:var(--sky-mid)}
+.pg .halo{stroke:var(--halo,var(--paper))}
+.pg .hd{fill:var(--sky)}
+.pg .gp{stroke:var(--gear)}
+.pg .gr{stroke:var(--sky-mid)}
+.pg .gl{fill:var(--gear);stroke:var(--sky-mid);stroke-width:2.5}
+.pg .gh,.pg .gd{fill:var(--sky-mid)}
+.pg .gc{stroke:var(--sky-mid);stroke-width:1.6}
+.pg .pul{fill:var(--paper);stroke:var(--sky-mid);stroke-width:2}
+.pg .fl{stroke:var(--rule);stroke-width:2}
+.pg .rc{fill:var(--gear);stroke:var(--sky-mid);stroke-width:1.5}
+.pg .mo{stroke:var(--sky-mid);stroke-width:2;stroke-dasharray:2.5 4.5}
+
+.iconsheet{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:16px}
+.iconsheet figure{margin:0;border:1px solid var(--rule)}
+.iconsheet figcaption{font-size:11px;text-align:center;color:var(--muted)}
+
+@media (hover:none){.hint-mouse{display:none}}
+@media (hover:hover){
+  .hint-touch{display:none}
+  .tile:hover{background:var(--sky-soft);--halo:var(--sky-soft)}
+  .tick:hover{background:var(--sky-soft)}
+  .icon-btn:hover,.row:hover{background:var(--sky-soft);--halo:var(--sky-soft)}
+  .alts button:hover{border-color:var(--sky)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+/* install prompt */
+.install{position:fixed;left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom,0px));max-width:456px;margin:0 auto;background:var(--paper);border:1.5px solid var(--rule);border-radius:16px;box-shadow:0 10px 30px rgba(13,38,56,.18);padding:14px 16px;z-index:25;display:grid;gap:10px}
+.install p{margin:0;font-size:14.5px;line-height:1.45}
+.install-actions{display:flex;gap:8px}
+.install .primary,.install .secondary{padding:10px 14px;font-size:15px}
+</style>
+</head>
+<body>
+<div id="app" dir="rtl" lang="he">
+  <header class="top">
+    <h1 class="mark" dir="ltr">Keeping <span>Fitt</span></h1>
+    <div class="seg" id="level" role="radiogroup" aria-label="רמת המתאמן">
+      <button type="button" role="radio" data-lv="0" aria-checked="false">מתחיל</button>
+      <button type="button" role="radio" data-lv="1" aria-checked="true">מתקדם</button>
+      <button type="button" role="radio" data-lv="2" aria-checked="false">מקצועי</button>
+    </div>
+  </header>
+  <nav class="splits" id="splits" aria-label="סוג אימון"></nav>
+  <section class="trail" aria-label="המסלול שלך באימון">
+    <div class="phases" id="phases"></div>
+    <div class="path" id="path"></div>
+  </section>
+  <main class="board" id="board" aria-label="הצעות לתרגיל הבא" aria-live="polite"></main>
+  <footer class="dock">
+    <button type="button" class="ghost" id="finish"></button>
+    <button type="button" class="zap" id="zap"></button>
+    <button type="button" class="ghost" id="openCat"></button>
+  </footer>
+</div>
+
+<div class="panel" id="catalog" role="dialog" aria-modal="true" aria-labelledby="catTitle" dir="rtl" lang="he" hidden>
+  <div class="panel-in">
+    <div class="panel-head">
+      <button type="button" class="back" id="catClose" aria-label="חזרה למסך הראשי"></button>
+      <h2 id="catTitle">קטלוג תרגילים</h2>
+    </div>
+    <label class="search" for="q"><span id="qIcon"></span><input id="q" type="search" placeholder="חיפוש לפי תרגיל או שריר" autocomplete="off"></label>
+    <div class="cats" id="cats"></div>
+    <div class="clist" id="clist"></div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" dir="rtl" lang="he" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-top"><span class="grip"></span><button type="button" class="icon-btn" id="sheetClose" aria-label="סגור"></button></div>
+    <div class="sheet-body" id="sheetBody"></div>
+    <div class="sheet-actions" id="sheetActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" dir="rtl" lang="he" role="status" hidden></div>
+
+<script id="engine">
+/* ---------- muscle targets ---------- */
+const T={
+  chest:{he:'חזה',cat:'chest'},
+  shoulders:{he:'כתפיים',cat:'shoulders'},
+  reardelt:{he:'כתף אחורית',cat:'shoulders'},
+  triceps:{he:'יד אחורית',cat:'triceps'},
+  back:{he:'גב',cat:'back'},
+  biceps:{he:'יד קדמית',cat:'biceps'},
+  quads:{he:'ארבע ראשי',cat:'legs'},
+  hams:{he:'ירך אחורית',cat:'legs'},
+  glutes:{he:'ישבן',cat:'legs'},
+  calves:{he:'תאומים',cat:'legs'},
+  core:{he:'בטן',cat:'core'}
+};
+const EQ={barbell:'מוט',dumbbell:'משקולות',cable:'כבל',machine:'מכונה',bw:'משקל גוף',ez:'מוט EZ'};
+const LV=['מתחיל','מתקדם','מקצועי'];
+const XL=['','בסיסי','בינוני','מתקדם'];
+
+/* ---------- movement patterns: [name, why it fits now] ---------- */
+const PAT={
+  flatpress:['לחיצה שטוחה','הלחיצה הבסיסית לחזה, עם העומס הגבוה ביותר.'],
+  inclinepress:['לחיצה בשיפוע','עוד לא עבדת על החזה העליון. שיפוע מתון מדגיש אותו.'],
+  declinepress:['שיפוע שלילי','מדגיש את החזה התחתון.'],
+  machinepress:['לחיצה במכונה','יציבות שמאפשרת לעבוד קרוב לכשל גם כשאתה כבר עייף.'],
+  pushup:['שכיבות סמיכה','פינישר במשקל גוף לסיום החזה.'],
+  dip:['מקבילים','עומס על החזה התחתון בטווח ארוך.'],
+  fly:['פרפר','אחרי הלחיצות, פרפר מבודד את החזה ומותח אותו.'],
+  cablefly:['פרפר בכבלים','מתח קבוע לאורך כל הטווח. סיום טוב לחזה.'],
+  upperfly:['פרפר מלמטה למעלה','בידוד לחזה העליון.'],
+  vpress:['לחיצה מעל הראש','תרגיל מורכב לכתפיים.'],
+  landmine:['לחיצה אלכסונית','לחיצת כתפיים שנוחה גם לכתף רגישה.'],
+  lateral:['הרחקה צידית','הכתף הצידית כמעט לא עובדת בלחיצות, וממנה מגיע רוחב הכתפיים.'],
+  frontraise:['הרמה קדמית','דגש נוסף לכתף הקדמית.'],
+  upright:['חתירה אנכית','כתף צידית וטרפז עליון בתרגיל אחד.'],
+  facepull:['פייס פול','מאזן את הכתף אחרי הרבה לחיצות.'],
+  rearfly:['פרפר הפוך','הכתף האחורית, חשובה ליציבה ולאיזון.'],
+  pushdown:['פשיטה בכבל','מדגיש את הראש הצידי של היד האחורית.'],
+  ohext:['פשיטה מעל הראש','מותח את הראש הארוך של היד האחורית, שפשיטות רגילות כמעט לא מותחות.'],
+  lyingext:['פשיטה בשכיבה','עבודה על כל שלושת הראשים של היד האחורית.'],
+  cgpress:['לחיצה צרה','תרגיל מורכב וכבד ליד האחורית.'],
+  tridip:['מקבילים זקוף','יד אחורית במשקל גוף, עם עומס גבוה.'],
+  kickback:['קיקבק','כיווץ מלא לסיום היד האחורית.'],
+  vpull:['משיכה אנכית','בונה את רוחב הגב.'],
+  hrow:['חתירה','בונה את עובי הגב.'],
+  pullover:['ידיים ישרות','בידוד לרחב הגבי בלי עבודת יד קדמית.'],
+  hinge:['ציר אגן','השרשרת האחורית: ישבן, ירך אחורית וגב תחתון.'],
+  backext:['פשיטת גב','חיזוק לגב התחתון ולישבן.'],
+  curl:['כפיפה','הבסיס ליד הקדמית.'],
+  hammer:['פטישים','ברכיאליס ואמה, לזרוע עבה יותר.'],
+  stretchcurl:['כפיפה במתיחה','הראש הארוך של היד הקדמית בטווח הארוך.'],
+  preacher:['כפיפה עם תמיכה','בידוד בלי תנופה מהגוף.'],
+  concentration:['כפיפה בריכוז','כיווץ מלא, יד אחת בכל פעם.'],
+  squat:['סקוואט','תרגיל מורכב ומרכזי לרגליים.'],
+  legpress:['לחיצת רגליים','נפח גבוה לרגליים עם עומס נמוך על הגב.'],
+  split:['פיצול רגליים','עבודה של רגל אחת, עם יציבות.'],
+  legext:['פשיטת ברך','בידוד לארבע ראשי.'],
+  legcurl:['כפיפת ברך','הירך האחורית בתפקיד של כופפת ברך.'],
+  nordic:['נורדיק','עבודה אקסצנטרית חזקה, שמפחיתה פציעות בירך האחורית.'],
+  thrust:['דחיקת אגן','הישבן בכיווץ מלא.'],
+  abduction:['הרחקת ירך','הישבן הבינוני, ליציבות האגן.'],
+  gkick:['בעיטה לאחור','בידוד לישבן.'],
+  calf:['הרמת עקבים','תאומים וסוליה.'],
+  antiext:['אנטי-אקסטנשן','ליבה שמונעת קשת בגב.'],
+  legraise:['הרמות רגליים','בטן תחתונה וגלגול אגן.'],
+  crunch:['כפיפת גו','ישר הבטן.'],
+  antirot:['אנטי-רוטציה','ליבה שמתנגדת לסיבוב.']
+};
+
+/* ---------- muscle groups for the catalog ---------- */
+const CATS=[
+  {id:'chest',he:'חזה',
+   anat:'החזה הגדול (Pectoralis major) בנוי משני ראשים עיקריים: הראש הקלביקולרי (העליון), שמחובר לעצם הבריח, והראש הסטרנוקוסטלי (האמצעי והתחתון), שמחובר לעצם החזה ולצלעות. מתחתיו נמצא החזה הקטן (Pectoralis minor), שמייצב את השכמה.',
+   fn:'קירוב אופקי של הזרוע (תנועת חיבוק), כיפוף הכתף (בעיקר הראש העליון) וסיבוב פנימי של הזרוע.',
+   pro:'זווית הספסל קובעת את הדגש: שיפוע של 15°–30° מדגיש את הראש העליון. לחיצות מעמיסות בעיקר באמצע הטווח, ופרפרים מעמיסים במתיחה. אימון חזה שלם כולל לחיצה כבדה, לחיצה בשיפוע ותרגיל פרפר. נפח שבועי מקובל להיפרטרופיה: 10–20 סטים.'},
+  {id:'shoulders',he:'כתפיים',
+   anat:'הדלתא (Deltoid) בנויה משלושה ראשים: קדמי, צידי ואחורי. מתחתיה נמצאים שרירי השרוול המסובב (Rotator cuff), שמייצבים את ראש עצם הזרוע בתוך המפרק.',
+   fn:'הראש הקדמי מכופף את הכתף, הצידי מרחיק את הזרוע לצד, והאחורי מיישר אותה ומרחיק אותה אופקית לאחור.',
+   pro:'הראש הקדמי מקבל עבודה רבה מלחיצות החזה, ולכן ברוב התוכניות מספיקה לחיצה אחת מעל הראש. רוחב הכתפיים נבנה מהראש הצידי, שמגיב טוב לנפח גבוה (12–20 סטים בשבוע) ולחזרות רבות. את הראש האחורי כדאי לאמן באימון הגב או בסוף אימון A, לטובת איזון ויציבה.'},
+  {id:'triceps',he:'יד אחורית',
+   anat:'היד האחורית (Triceps brachii) בנויה משלושה ראשים: ארוך, צידי ומדיאלי. הראש הארוך הוא היחיד שעובר גם דרך מפרק הכתף.',
+   fn:'יישור המרפק. הראש הארוך מסייע גם ביישור הכתף ובקירובה.',
+   pro:'הראש הארוך חוצה את הכתף, ולכן הוא נמתח רק כשהזרוע מעל הראש. כדאי לשלב תרגיל מעל הראש (פשיטה בכבל או במשקולת) לצד פשיטות בכבל, שמדגישות את הראש הצידי והמדיאלי. אחרי אימון חזה כבד, היד האחורית כבר עייפה: 2–3 תרגילים מספיקים.'},
+  {id:'back',he:'גב',
+   anat:'הגב כולל את הרחב הגבי (Latissimus dorsi), הטרפז (עליון, אמצעי ותחתון), המעוינים (Rhomboids), הטרס הגדול, וזוקפי הגו לאורך עמוד השדרה.',
+   fn:'הרחב מושך את הזרוע למטה ולאחור (יישור וקירוב הכתף). הגב העליון מקרב ומייצב את השכמות. זוקפי הגו מיישרים ומייצבים את עמוד השדרה.',
+   pro:'משיכות אנכיות (מתח, פולי) בונות בעיקר רוחב, וחתירות בונות עובי. מסלול המרפק קובע את הדגש: מרפקים צמודים ולכיוון האגן מדגישים את הרחב, ומרפקים רחבים בגובה הכתף מדגישים את הגב העליון והכתף האחורית. אימון גב מאוזן כולל לפחות משיכה אנכית אחת וחתירה אחת.'},
+  {id:'biceps',he:'יד קדמית',
+   anat:'הדו-ראשי (Biceps brachii) בנוי מראש ארוך וראש קצר. מתחתיו נמצא הברכיאליס (Brachialis), ובאמה הברכיורדיאליס (Brachioradialis).',
+   fn:'כיפוף המרפק וסיבוב האמה כלפי חוץ (סופינציה). הראש הארוך עובר דרך הכתף ומסייע בכיפוף שלה.',
+   pro:'כשהזרוע מאחורי הגוף (כפיפה בשיפוע, בייסיאן), הראש הארוך נמתח. כשהזרוע לפני הגוף (כיסא כומר, עכביש), הדגש עובר לראש הקצר. אחיזת פטיש מגייסת את הברכיאליס והברכיורדיאליס. אחרי אימון גב, 2–3 תרגילים מספיקים.'},
+  {id:'legs',he:'רגליים',
+   anat:'הארבע ראשי (Quadriceps) בחזית הירך: ישר הירך ושלושת הרחבים. הירך האחורית (Hamstrings): הדו-ראשי הירכי, החצי-גידי והחצי-קרומי. הישבן: הגדול, הבינוני והקטן. בשוק: התאומים (Gastrocnemius) והסוליה (Soleus).',
+   fn:'הארבע ראשי מיישר את הברך, וישר הירך גם מכופף את האגן. הירך האחורית מכופפת את הברך ומיישרת את האגן. הישבן מיישר ומרחיק את האגן. התאומים והסוליה מורידים את כף הרגל (עמידה על קצות האצבעות).',
+   pro:'ישר הירך והירך האחורית חוצים שני מפרקים, ולכן נמתחים רק במנחים מסוימים, למשל פשיטת ברכיים בנטייה לאחור וכפיפת ברכיים בישיבה. סדר מקובל: תרגיל מורכב כבד (סקוואט או לחיצת רגליים), ציר אגן (דדליפט רומני), ואז בידודים. התאומים מגיבים טוב לעצירה במתיחה.'},
+  {id:'core',he:'בטן',
+   anat:'ישר הבטן (Rectus abdominis), האלכסוניים החיצוניים והפנימיים, הבטן הרוחבית (Transversus abdominis), ובגב התחתון: הריבועי המותני וזוקפי הגו.',
+   fn:'כיפוף וסיבוב הגו, ובעיקר מניעת תנועה: אנטי-אקסטנשן, אנטי-רוטציה ואנטי-כיפוף צידי, כדי להעביר כוח בבטחה.',
+   pro:'אימון ליבה שלם משלב כיפוף (כפיפות בכבל), אנטי-אקסטנשן (גלגלת, פלאנק) ואנטי-רוטציה (פאלוף). כמו כל שריר, הבטן מגיבה לעומס הדרגתי. בסוף אימון, 1–2 תרגילים מספיקים.'}
+];
+
+/* ---------- exercises ---------- */
+const EXS=[
+/* chest */
+{id:'bench',he:'לחיצת חזה במוט',en:'Barbell Bench Press',t:'chest',p:'flatpress',c:1,eq:'barbell',lv:1,pop:5,ic:'bench',
+ m:['חזה גדול (אמצעי ותחתון)'],s:['חזה עליון','כתף קדמית','יד אחורית'],
+ how:['שכב על הספסל כשהעיניים מתחת למוט וכפות הרגליים נטועות ברצפה.','אחוז מעט רחב מרוחב הכתפיים. קרב את השכמות זו לזו והורד אותן לכיוון האגן.','הורד את המוט בשליטה לאמצע-תחתית החזה, ודחוף בחזרה למעלה בקו אלכסוני קל לכיוון הכתפיים.'],
+ cue:['שכמות “בכיסים האחוריים” לאורך כל הסט','מרפקים בזווית של 45°–70° מהגוף, לא 90°','אמות אנכיות לרצפה בתחתית התנועה'],
+ err:['הקפצת המוט מהחזה','הרמת הישבן מהספסל','מרפקים פתוחים לצדדים ב-90°, עם עומס מיותר על הכתף'],
+ pro:'התרגיל המרכזי לכוח בדחיקה אופקית. רוחב האחיזה משנה את הדגש: אחיזה רחבה מגבירה את עבודת החזה, ואחיזה צרה מעבירה עבודה ליד האחורית. קשת גב מתונה מקצרת את הטווח ומשפרת את מנח הכתף. להיפרטרופיה, הורד את המוט ב-2–3 שניות והשאר 1–2 חזרות ברזרבה.'},
+{id:'db_bench',he:'לחיצת חזה במשקולות',en:'Dumbbell Bench Press',t:'chest',p:'flatpress',c:1,eq:'dumbbell',lv:1,pop:4,ic:'bench_db',
+ m:['חזה גדול'],s:['כתף קדמית','יד אחורית'],
+ how:['שב עם המשקולות על הירכיים, שכב לאחור והבא אותן לגובה החזה.','סובב את כפות הידיים מעט פנימה וקרב את השכמות.','דחוף למעלה עד שהמשקולות כמעט נוגעות, והורד לאט עד מתיחה בחזה.'],
+ cue:['ירידה מעט עמוקה יותר מבמוט, בלי לאבד את מנח השכמות','דחוף “פנימה ולמעלה” במסלול של קשת קלה'],
+ err:['הורדה לא סימטרית בין הידיים','פיזור המשקולות לצדדים בירידה'],
+ pro:'טווח תנועה ארוך יותר מבמוט ועבודה נפרדת לכל יד, שמאזנת בין הצדדים. מתאים כתרגיל ראשון או שני אחרי המוט. למתיחה מקסימלית, עצור שנייה בתחתית.'},
+{id:'incline_bench',he:'לחיצה בשיפוע חיובי במוט',en:'Incline Barbell Press',t:'chest',p:'inclinepress',c:1,eq:'barbell',lv:1,pop:4,ic:'incline',
+ m:['חזה עליון (ראש קלביקולרי)'],s:['כתף קדמית','יד אחורית'],
+ how:['כוון את הספסל לשיפוע של כ-30°.','הורד את המוט אל החזה העליון, מתחת לעצם הבריח.','דחוף אנכית למעלה, אל מעל הכתפיים.'],
+ cue:['שיפוע של 15°–30° מספיק. מעל 45° הכתף הקדמית לוקחת את רוב העבודה','חזה “גבוה” ושכמות מקורבות'],
+ err:['שיפוע תלול מדי','הורדת המוט לבטן במקום לחזה העליון'],
+ pro:'הראש הקלביקולרי משתתף יותר בכיפוף הכתף, ולכן שיפוע מתון מדגיש אותו. שיפוע של כ-30° נותן יחס טוב בין חזה עליון לכתף קדמית. כשהמטרה היא פיתוח החזה העליון, כדאי לבצע אותו לפני הלחיצה השטוחה.'},
+{id:'incline_db',he:'לחיצה בשיפוע חיובי במשקולות',en:'Incline Dumbbell Press',t:'chest',p:'inclinepress',c:1,eq:'dumbbell',lv:1,pop:5,ic:'incline_db',
+ m:['חזה עליון'],s:['כתף קדמית','יד אחורית'],
+ how:['ספסל בשיפוע של 30°, משקולות בגובה החזה העליון.','דחוף למעלה ופנימה עד שהמשקולות מעל הכתפיים.','הורד לאט עד מתיחה בחזה העליון.'],
+ cue:['מרפקים מעט מתחת לקו הכתפיים','אחיזה ניטרלית למחצה מקלה על הכתף'],
+ err:['קשת גב מוגזמת שהופכת את התרגיל ללחיצה שטוחה','נקישה בין המשקולות למעלה'],
+ pro:'מהתרגילים היעילים ביותר לחזה העליון, עם טווח ארוך ומתיחה טובה. כתרגיל שני אחרי לחיצה שטוחה כבדה, עבוד ב-8–12 חזרות. עצירה של שנייה בתחתית משפרת שליטה ומוסיפה גירוי במתיחה.'},
+{id:'machine_press',he:'לחיצת חזה במכונה',en:'Machine Chest Press',t:'chest',p:'machinepress',c:1,eq:'machine',lv:1,pop:4,ic:'machine_press',
+ m:['חזה גדול'],s:['כתף קדמית','יד אחורית'],
+ how:['כוון את המושב כך שהידיות בגובה אמצע החזה.','הצמד את הגב למשענת וקרב את השכמות.','דחוף קדימה עד כמעט יישור מלא וחזור לאט.'],
+ cue:['בלי לנעול מרפקים בסוף','חזה פתוח לאורך כל התנועה'],
+ err:['מושב נמוך או גבוה מדי','כתפיים שעולות קדימה בסוף הדחיפה'],
+ pro:'היציבות מאפשרת לעבוד קרוב לכשל בבטחה. מצוין לסטים האחרונים, לדרופ-סטים או לסיום בלוק החזה אחרי משקולות חופשיות. במכונה עם ידיות נפרדות אפשר לעבוד ביד אחת.'},
+{id:'db_fly',he:'פרפר במשקולות',en:'Dumbbell Fly',t:'chest',p:'fly',c:0,eq:'dumbbell',lv:1,pop:4,ic:'fly',
+ m:['חזה גדול'],s:['כתף קדמית','יד קדמית (ייצוב)'],
+ how:['שכב על ספסל שטוח עם משקולות מעל החזה, כפות פונות זו לזו.','פתח את הידיים בקשת רחבה, עם כיפוף קל וקבוע במרפק.','רד עד מתיחה בחזה וחזור באותה קשת, כאילו אתה מחבק עץ.'],
+ cue:['זווית המרפק קבועה לאורך כל התנועה','עצור כשהזרוע בקו הגוף, לא מתחתיו'],
+ err:['כיפוף ויישור של המרפקים, שהופכים את התרגיל ללחיצה','ירידה עמוקה מדי עם משקל כבד'],
+ pro:'הקושי מקסימלי במתיחה ונעלם למעלה, כך שהתרגיל מעמיס בעיקר בטווח הארוך. לעומס לאורך כל הטווח עדיף פרפר בכבלים. מתאים אחרי לחיצות, ב-10–15 חזרות.'},
+{id:'pec_deck',he:'פרפר במכונה',en:'Pec Deck',t:'chest',p:'fly',c:0,eq:'machine',lv:1,pop:5,ic:'pecdeck',
+ m:['חזה גדול'],s:['כתף קדמית'],
+ how:['כוון את המושב כך שהידיות בגובה החזה.','קרב את הידיים בתנועת חיבוק עד שהן נפגשות מול החזה.','חזור לאט עד מתיחה, בלי לתת למשקולות לנחות.'],
+ cue:['דחוף עם המרפקים והאמות, לא עם כפות הידיים','חזה גבוה, כתפיים למטה'],
+ err:['כתפיים שמתגלגלות קדימה בסוף התנועה','טווח קצר בלי מתיחה'],
+ pro:'עומס יציב לאורך הטווח. מתאים לטכניקות עצימות: מיו-רפס, דרופ-סט או חזרות חלקיות בטווח הארוך אחרי כשל. עבודה ביד אחת מאפשרת לחצות את קו האמצע ולהגיע לכיווץ מלא.'},
+{id:'cable_cross',he:'קרוס-אובר בכבלים',en:'Cable Crossover',t:'chest',p:'cablefly',c:0,eq:'cable',lv:1,pop:4,ic:'crossover',
+ m:['חזה גדול (אמצעי ותחתון)'],s:['כתף קדמית'],
+ how:['כבלים בגובה הכתפיים או מעליהן, עמידת פסיעה קדימה.','משוך את הידיות בקשת למטה ופנימה עד מול הבטן.','חזור לאט עד מתיחה בחזה.'],
+ cue:['גוף יציב בנטייה קלה קדימה','כיווץ מלא, עם הצלבה קלה של הידיים בסוף'],
+ err:['משיכה עם הגב והכתפיים','משקל כבד מדי שמושך את הגוף לאחור'],
+ pro:'מתח קבוע לאורך כל הטווח. גובה הגלגלת קובע את הדגש: גבוהה לחזה התחתון, בגובה הכתף לאמצעי, נמוכה לעליון. סיום מצוין לאימון חזה, בסטים של 12–20.'},
+{id:'low_high',he:'פרפר כבלים מלמטה למעלה',en:'Low-to-High Cable Fly',t:'chest',p:'upperfly',c:0,eq:'cable',lv:2,pop:2,ic:'crossover_low',
+ m:['חזה עליון'],s:['כתף קדמית'],
+ how:['גלגלות בנקודה הנמוכה, ידיות בידיים ונטייה קלה קדימה.','הרם את הידיים בקשת למעלה ופנימה עד גובה הסנטר.','חזור לאט לנקודת המתיחה.'],
+ cue:['כפות הידיים פונות למעלה','דמיין שאתה מוזג שני דליים למרכז'],
+ err:['הרמת הכתפיים לכיוון האוזניים','הפיכת התנועה להרמה קדמית'],
+ pro:'מכוון לסיבים הקלביקולריים דרך כיפוף וקירוב של הכתף. השלמה טובה ללחיצה בשיפוע כשהחזה העליון מפגר. 12–15 חזרות, עם עצירה בכיווץ.'},
+{id:'dips_chest',he:'מקבילים בדגש חזה',en:'Chest Dips',t:'chest',p:'dip',c:1,eq:'bw',lv:2,pop:3,ic:'dips',
+ m:['חזה תחתון'],s:['יד אחורית','כתף קדמית'],
+ how:['תמוך במקבילים עם ידיים ישרות.','הטה את הגוף קדימה כ-30° ורד עד שהכתף מעט מתחת למרפק.','דחוף חזרה למעלה בלי לנעול בכוח.'],
+ cue:['יותר נטייה קדימה, יותר חזה','מרפקים מעט פתוחים לצדדים'],
+ err:['ירידה עמוקה מדי כשהכתף מתגלגלת קדימה','נדנוד הרגליים'],
+ pro:'מעמיס חזק את החזה התחתון בטווח ארוך. לא מתאים למי שיש לו רגישות בכתף הקדמית. התקדמות: משקל נוסף בחגורה, או ירידה איטית של 4 שניות.'},
+{id:'pushup',he:'שכיבות סמיכה',en:'Push-up',t:'chest',p:'pushup',c:1,eq:'bw',lv:1,pop:3,ic:'pushup',
+ m:['חזה גדול'],s:['יד אחורית','כתף קדמית','ליבה'],
+ how:['ידיים מעט רחבות מהכתפיים, הגוף בקו ישר מהראש ועד העקבים.','רד עד שהחזה כמעט נוגע ברצפה.','דחוף חזרה, עם בטן וישבן מכווצים.'],
+ cue:['מרפקים בזווית של 45° מהגוף','השכמות נעות בחופשיות'],
+ err:['אגן שוקע','חצי טווח תנועה'],
+ pro:'השכמות חופשיות לנוע, ולכן גם הסראטוס הקדמי עובד. מצוין כפינישר: סט אחד עד כשל אחרי הלחיצות. התקדמות: הגבהת הרגליים, אפוד משקל או גומייה על הגב.'},
+{id:'decline',he:'לחיצה בשיפוע שלילי',en:'Decline Press',t:'chest',p:'declinepress',c:1,eq:'barbell',lv:2,pop:2,ic:'bench',
+ m:['חזה תחתון'],s:['יד אחורית'],
+ how:['ספסל בשיפוע שלילי של 15°–30°, רגליים נעולות.','הורד את המוט אל החזה התחתון.','דחוף למעלה בקו ישר.'],
+ cue:['הטווח קצר יותר, אז אפשר משקל כבד יותר','בקש עזרה בהוצאת המוט'],
+ err:['שיפוע תלול מדי','לחיצה כבדה בלי שומר'],
+ pro:'מדגיש את הסיבים התחתונים של החזה עם פחות עומס על הכתף. אפשר להחליף אותו במקבילים או בקרוס-אובר מלמעלה למטה.'},
+{id:'larsen',he:'לחיצת לארסן',en:'Larsen Press',t:'chest',p:'flatpress',c:1,eq:'barbell',lv:3,pop:1,ic:'bench',
+ m:['חזה גדול'],s:['יד אחורית','כתף קדמית','ליבה'],
+ how:['שכב על הספסל עם רגליים ישרות באוויר, או מונחות בלי לדחוף ברצפה.','הורד את המוט לחזה בשליטה מלאה.','דחוף למעלה בלי עזרה מהרגליים.'],
+ cue:['משקל של כ-80% מהלחיצה הרגילה','יציבות מהבטן ומהשכמות'],
+ err:['איבוד יציבות וסיבוב של הגוף','שימוש במשקל של לחיצה רגילה'],
+ pro:'מבטל את דחיפת הרגליים (leg drive) ומחייב יציבות של פלג הגוף העליון. מאמני כוח משתמשים בו לשיפור נקודת התקיעה מעל החזה. מתאים כתרגיל משני אחרי הלחיצה הראשית, 3–4 סטים של 5–8.'},
+/* shoulders */
+{id:'ohp',he:'לחיצת כתפיים בעמידה',en:'Overhead Press',t:'shoulders',p:'vpress',c:1,eq:'barbell',lv:2,pop:4,ic:'ohp',
+ m:['כתף קדמית'],s:['כתף צידית','יד אחורית','טרפז עליון','ליבה'],
+ how:['המוט על החזה העליון, אחיזה מעט רחבה מהכתפיים.','כווץ ישבן ובטן, ודחוף את המוט ישר למעלה תוך הזזת הראש לאחור.','בסוף התנועה הראש “נכנס” מתחת למוט, והמוט מעל אמצע כף הרגל.'],
+ cue:['צלעות למטה, בלי קשת בגב','אמות אנכיות בתחתית'],
+ err:['קשת גדולה בגב התחתון','דחיפת המוט קדימה במקום למעלה'],
+ pro:'התרגיל הבסיסי לכוח כתפיים, ומגייס בעיקר את הכתף הקדמית. אחרי אימון חזה כבד, כדאי להוריד נפח או לבחור בגרסה בישיבה. מאמני כוח משתמשים בו כמדד לכוח של פלג הגוף העליון.'},
+{id:'db_shoulder',he:'לחיצת כתפיים במשקולות בישיבה',en:'Seated DB Shoulder Press',t:'shoulders',p:'vpress',c:1,eq:'dumbbell',lv:1,pop:5,ic:'ohp_seated',
+ m:['כתף קדמית'],s:['כתף צידית','יד אחורית'],
+ how:['ספסל זקוף ב-80°–90°, משקולות בגובה האוזניים.','דחוף למעלה עד כמעט יישור מלא מעל הראש.','הורד בשליטה עד שהמרפקים מעט מתחת לכתפיים.'],
+ cue:['מרפקים מעט קדימה לקו הגוף, במישור השכמה','גב צמוד למשענת'],
+ err:['הורדה רדודה מדי','קשת גדולה בגב'],
+ pro:'יציב ובטוח יותר מהמוט בעמידה, ולכן מתאים אחרי אימון חזה. עבודה במישור השכמה (מרפקים כ-30° קדימה) נוחה יותר למפרק הכתף. 8–12 חזרות.'},
+{id:'machine_shoulder',he:'לחיצת כתפיים במכונה',en:'Machine Shoulder Press',t:'shoulders',p:'vpress',c:1,eq:'machine',lv:1,pop:4,ic:'ohp_seated',
+ m:['כתף קדמית'],s:['כתף צידית','יד אחורית'],
+ how:['כוון את המושב כך שהידיות בגובה הכתפיים.','דחוף למעלה עד כמעט יישור מלא.','הורד לאט עד גובה הכתפיים.'],
+ cue:['גב צמוד למשענת','בלי לנעול מרפקים'],
+ err:['מושב נמוך מדי','שימוש בתנופה'],
+ pro:'מאפשר לעבוד קרוב לכשל בלי צורך בייצוב. מתאים מאוד אחרי לחיצות חזה, כשהשרירים המייצבים כבר עייפים.'},
+{id:'arnold',he:'לחיצת ארנולד',en:'Arnold Press',t:'shoulders',p:'vpress',c:1,eq:'dumbbell',lv:2,pop:3,ic:'ohp_seated',
+ m:['כתף קדמית'],s:['כתף צידית','יד אחורית'],
+ how:['התחל עם המשקולות מול הפנים, כפות הידיים פונות אליך.','תוך כדי דחיפה למעלה, סובב את כפות הידיים החוצה.','בירידה, הסיבוב חוזר לאחור.'],
+ cue:['סיבוב חלק ורציף','שליטה בירידה'],
+ err:['משקל כבד מדי שפוגע בטכניקה','קצב מהיר מדי'],
+ pro:'מוסיף טווח וסיבוב, עם דגש גבוה על הכתף הקדמית. אם לחיצות החזה כבר העמיסו את הכתף הקדמית, עדיף לבחור הרחקות צידיות.'},
+{id:'landmine',he:'לחיצת לנדמיין',en:'Landmine Press',t:'shoulders',p:'landmine',c:1,eq:'barbell',lv:2,pop:2,ic:'landmine',
+ m:['כתף קדמית','חזה עליון'],s:['יד אחורית','סראטוס','ליבה'],
+ how:['קצה אחד של המוט בעוגן או בפינה, הקצה השני בגובה הכתף.','דחוף למעלה וקדימה בקו אלכסוני.','חזור בשליטה.'],
+ cue:['תן לשכמה לנוע קדימה בסוף התנועה','בטן מכווצת, בלי סיבוב של הגוף'],
+ err:['קשת בגב','דחיפה עם הרגליים'],
+ pro:'המסלול האלכסוני נוח לכתפיים רגישות. עובד היטב ביד אחת ובעמידת חצי כריעה. חלופה טובה ללחיצה מעל הראש כשיש מגבלה בטווח התנועה.'},
+{id:'lat_raise',he:'הרחקת כתפיים במשקולות',en:'Lateral Raise',t:'shoulders',p:'lateral',c:0,eq:'dumbbell',lv:1,pop:5,ic:'lateral',
+ m:['כתף צידית'],s:['טרפז עליון','סופרהספינטוס'],
+ how:['עמוד עם המשקולות לצד הגוף, בנטייה קלה קדימה.','הרם את הידיים לצדדים עד גובה הכתפיים, מרפקים מעט כפופים.','הורד לאט, ב-2–3 שניות.'],
+ cue:['הובל עם המרפקים, לא עם כפות הידיים','אם הכתף רגישה, החזק את המשקולות באחיזה ניטרלית'],
+ err:['תנופה מהגב','הרמת הכתפיים לכיוון האוזניים'],
+ pro:'הכתף הצידית כמעט לא עובדת בלחיצות, ולכן התרגיל הזה הכרחי לרוחב הכתפיים. מגיב טוב לנפח גבוה ולחזרות רבות (12–20 ומעלה). מתאים לטכניקות עצימות כמו דרופ-סט או חזרות חלקיות בסוף הסט.'},
+{id:'cable_lat',he:'הרחקה בכבל ביד אחת',en:'Cable Lateral Raise',t:'shoulders',p:'lateral',c:0,eq:'cable',lv:2,pop:3,ic:'lateral',
+ m:['כתף צידית'],s:['טרפז עליון'],
+ how:['גלגלת נמוכה. עמוד בצד כשהכבל עובר מול הגוף או מאחוריו.','הרם את היד לצד עד גובה הכתף.','חזור לאט עד שהיד חוצה את קו הגוף.'],
+ cue:['גוף יציב, היד החופשית אוחזת במכונה','טווח מלא, כולל המתיחה בתחתית'],
+ err:['הטיית הגוף כדי להרים','משקל כבד מדי'],
+ pro:'בניגוד למשקולת, הכבל מעמיס גם בתחתית התנועה ומגרה את השריר בטווח הארוך. כשהכבל עובר מאחורי הגוף, המתיחה גדלה.'},
+{id:'cable_y',he:'הרמת Y בכבלים',en:'Cable Y-Raise',t:'shoulders',p:'lateral',c:0,eq:'cable',lv:3,pop:1,ic:'lateral',
+ m:['כתף צידית'],s:['טרפז תחתון','כתף אחורית'],
+ how:['שתי גלגלות נמוכות, ידיות בהצלבה (יד ימין בכבל השמאלי).','הרם את הידיים בקשת למעלה ולצדדים, בצורת Y.','חזור לאט לתחתית.'],
+ cue:['מסלול במישור השכמה, כ-30° קדימה','מרפקים רכים'],
+ err:['הרמה גבוהה מדי עם הכתפיים','קשת בגב'],
+ pro:'הכבלים המוצלבים יוצרים עומס דווקא בטווח הארוך. גם הטרפז התחתון עובד, וזה תורם לבריאות השכמה. כלי טוב למתאמנים מתקדמים שכבר לא מתקדמים בהרחקות רגילות.'},
+{id:'front_raise',he:'הרמה קדמית',en:'Front Raise',t:'shoulders',p:'frontraise',c:0,eq:'dumbbell',lv:1,pop:3,ic:'frontraise',
+ m:['כתף קדמית'],s:['חזה עליון'],
+ how:['עמוד עם משקולות או צלחת מול הירכיים.','הרם קדימה עד גובה העיניים.','הורד לאט.'],
+ cue:['בלי תנופה','אפשר לסירוגין, יד אחרי יד'],
+ err:['הרמה מעל הראש עם קשת בגב','שימוש בגב'],
+ pro:'הכתף הקדמית כבר עובדת הרבה בלחיצות חזה וכתפיים, ולכן ברוב התוכניות אין בו צורך. שימושי כשיש פיגור ספציפי בכתף הקדמית, או לספורטאים.'},
+{id:'upright',he:'חתירה אנכית באחיזה רחבה',en:'Wide Upright Row',t:'shoulders',p:'upright',c:1,eq:'cable',lv:2,pop:2,ic:'upright',
+ m:['כתף צידית','טרפז עליון'],s:['יד קדמית','כתף קדמית'],
+ how:['אחוז מוט או ידית כבל באחיזה ברוחב הכתפיים או רחבה יותר.','משוך למעלה עם המרפקים עד גובה בית החזה.','הורד בשליטה.'],
+ cue:['המרפקים מובילים ונשארים מעל כפות הידיים','לא לעלות מעל גובה הכתף'],
+ err:['אחיזה צרה, שמגבירה לחץ על הכתף','משיכה גבוהה מדי'],
+ pro:'אחיזה רחבה מפחיתה את הסיכון לצביטה (impingement) ומעבירה את הדגש לכתף הצידית. בכבל העומס חלק יותר. לא מתאים למי שיש לו כאבי כתף.'},
+{id:'face_pull',he:'פייס פול',en:'Face Pull',t:'reardelt',p:'facepull',c:0,eq:'cable',lv:1,pop:4,ic:'facepull',
+ m:['כתף אחורית','טרפז אמצעי'],s:['מסובבים חיצוניים','מעוינים'],
+ how:['גלגלת בגובה הפנים עם חבל, אחיזה מלמעלה.','משוך את החבל לכיוון הפנים והפרד בין הקצוות.','בסוף, סובב את הידיים החוצה, כמו בתנוחת “דאבל ביספס”.'],
+ cue:['מרפקים גבוהים, בגובה הכתפיים','עצור שנייה בכיווץ'],
+ err:['משקל כבד שהופך את התרגיל לחתירה','הטיית הגוף לאחור'],
+ pro:'משלב הרחקה אופקית וסיבוב חיצוני, ולכן חשוב לבריאות הכתף ולאיזון מול הלחיצות. נפח מומלץ: 2–4 סטים של 15–20 חזרות. אפשר לשלב גם בסוף אימון A.'},
+{id:'reverse_pecdeck',he:'פרפר הפוך במכונה',en:'Reverse Pec Deck',t:'reardelt',p:'rearfly',c:0,eq:'machine',lv:1,pop:4,ic:'reversefly',
+ m:['כתף אחורית'],s:['טרפז אמצעי','מעוינים'],
+ how:['שב עם החזה צמוד לכרית, ידיות בגובה הכתפיים.','פתח את הידיים לאחור בקשת רחבה, מרפקים מעט כפופים.','חזור לאט עד שהידיים כמעט נפגשות.'],
+ cue:['חשוב על “לדחוף החוצה” ולא על “למשוך”','בלי לקרב שכמות בכוח, כדי לבודד את הכתף'],
+ err:['כיווץ שכמות שמשתלט על התנועה','תנופה'],
+ pro:'כדי לבודד את הכתף האחורית, השאר את השכמות יחסית במקום. אחיזה ניטרלית ואחיזה מלמעלה תקינות שתיהן. מגיב טוב לסטים ארוכים של 15–25 חזרות ולחזרות חלקיות בסוף.'},
+{id:'rear_fly',he:'פרפר הפוך בהטיה',en:'Bent-over Rear Delt Fly',t:'reardelt',p:'rearfly',c:0,eq:'dumbbell',lv:1,pop:3,ic:'reversefly',
+ m:['כתף אחורית'],s:['טרפז אמצעי'],
+ how:['הטה את הגוף קדימה, כמעט במקביל לרצפה, עם גב ישר.','הרם את המשקולות לצדדים עד קו הכתפיים.','הורד לאט.'],
+ cue:['ראש ניטרלי, מבט לרצפה','משקל קל וטכניקה מדויקת'],
+ err:['שימוש בגב התחתון','הרמת הגוף תוך כדי התנועה'],
+ pro:'אפשר לבצע עם החזה על ספסל משופע, כדי למנוע תנופה ולהוריד עומס מהגב התחתון. מתאים לסיום אימון גב.'},
+/* triceps */
+{id:'pushdown',he:'פשיטת מרפקים בכבל',en:'Cable Pushdown',t:'triceps',p:'pushdown',c:0,eq:'cable',lv:1,pop:5,ic:'pushdown',
+ m:['יד אחורית (ראש צידי ומדיאלי)'],s:[],
+ how:['גלגלת עליונה עם מוט ישר או ידית V, מרפקים צמודים לגוף.','דחוף למטה עד יישור מלא.','חזור לאט עד שהאמות מעט מעל קו המקביל לרצפה.'],
+ cue:['המרפקים במקום, רק האמות זזות','נטייה קלה קדימה'],
+ err:['מרפקים שנעים קדימה ואחורה','שימוש במשקל הגוף כדי לדחוף'],
+ pro:'מדגיש את הראש הצידי והמדיאלי וכמעט לא מותח את הראש הארוך, ולכן כדאי לשלב איתו תרגיל מעל הראש. מתאים לדרופ-סטים ולעבודה עד כשל.'},
+{id:'rope_pushdown',he:'פשיטה בחבל',en:'Rope Pushdown',t:'triceps',p:'pushdown',c:0,eq:'cable',lv:1,pop:5,ic:'pushdown',
+ m:['יד אחורית (ראש צידי)'],s:[],
+ how:['גלגלת עליונה עם חבל, אגודלים למעלה.','דחוף למטה ופתח את קצוות החבל החוצה בסוף התנועה.','חזור לאט.'],
+ cue:['פתיחת החבל בסוף נותנת כיווץ חזק יותר','מרפקים צמודים לגוף'],
+ err:['משקל כבד מדי שלא מאפשר לפתוח את החבל','כתפיים שמתרוממות'],
+ pro:'האחיזה הניטרלית נוחה למפרקי כף היד והמרפק. טוב לסיום אימון יד אחורית, בסטים של 12–20.'},
+{id:'oh_cable',he:'פשיטה מעל הראש בכבל',en:'Overhead Cable Extension',t:'triceps',p:'ohext',c:0,eq:'cable',lv:2,pop:4,ic:'ohext_cable',
+ m:['יד אחורית (ראש ארוך)'],s:['ראש צידי ומדיאלי'],
+ how:['עמוד עם הגב לגלגלת, החבל מאחורי הראש, בעמידת פסיעה.','פשוט את המרפקים קדימה ולמעלה עד יישור.','חזור לאט עד מתיחה עמוקה.'],
+ cue:['מרפקים מכוונים קדימה, לא לצדדים','בטן מכווצת, בלי קשת בגב'],
+ err:['תנועה מהכתף במקום מהמרפק','טווח קצר'],
+ pro:'הראש הארוך עובר דרך מפרק הכתף ונמתח כשהזרוע מעל הראש. מחקרי השוואה הראו צמיחה גדולה יותר של היד האחורית כולה באימון מעל הראש, לעומת פשיטה רגילה בכבל. כדאי שיהיה תרגיל קבוע בתוכנית.'},
+{id:'oh_db',he:'פשיטה מעל הראש במשקולת',en:'Overhead DB Extension',t:'triceps',p:'ohext',c:0,eq:'dumbbell',lv:1,pop:4,ic:'ohext',
+ m:['יד אחורית (ראש ארוך)'],s:[],
+ how:['שב על ספסל עם משענת, ואחוז משקולת בשתי ידיים מעל הראש.','הורד את המשקולת מאחורי הראש עד מתיחה.','פשוט חזרה למעלה.'],
+ cue:['מרפקים קרובים לראש','המשענת מונעת קשת בגב'],
+ err:['מרפקים שנפתחים לצדדים','ירידה מהירה'],
+ pro:'הגרסה הפשוטה והזמינה ביותר לעבודה על הראש הארוך במתיחה. אם הכתף רגישה, עדיף לבצע בכבל או ביד אחת.'},
+{id:'skull',he:'לחיצה צרפתית בשכיבה',en:'Skull Crusher',t:'triceps',p:'lyingext',c:0,eq:'ez',lv:2,pop:4,ic:'skull',
+ m:['יד אחורית (כל הראשים)'],s:[],
+ how:['שכב על ספסל עם מוט EZ מעל החזה.','כופף את המרפקים והורד את המוט לכיוון המצח, או מעט מאחורי הראש.','פשוט חזרה למעלה.'],
+ cue:['הזרועות בזווית קלה לאחור, לא אנכיות','הורדה מאחורי הראש נותנת יותר מתיחה לראש הארוך'],
+ err:['מרפקים פתוחים לצדדים','הורדה מהירה ומסוכנת לכיוון המצח'],
+ pro:'הורדת המוט מאחורי הראש מגדילה את הכיפוף בכתף ואת המתיחה של הראש הארוך. גרסאות מתקדמות: Tate Press ו-JM Press. עדיף לבצע באמצע בלוק היד האחורית, אחרי תרגיל מורכב.'},
+{id:'cgbp',he:'לחיצת חזה באחיזה צרה',en:'Close-Grip Bench Press',t:'triceps',p:'cgpress',c:1,eq:'barbell',lv:2,pop:3,ic:'bench',
+ m:['יד אחורית'],s:['חזה','כתף קדמית'],
+ how:['אחוז את המוט ברוחב הכתפיים, לא צר יותר.','הורד את המוט לחזה התחתון, מרפקים קרובים לגוף.','דחוף למעלה.'],
+ cue:['רוחב כתפיים מספיק. אחיזה צרה יותר מעמיסה על פרקי הידיים','מרפקים בזווית של כ-30° מהגוף'],
+ err:['אחיזה צרה מדי','מרפקים פתוחים לצדדים'],
+ pro:'תרגיל מורכב ליד האחורית שמאפשר עומס כבד. מתאים כתרגיל ראשון בבלוק היד האחורית, או כתרגיל עזר לשיפור לחיצת החזה. 3–4 סטים של 6–10.'},
+{id:'dips_tri',he:'מקבילים בדגש יד אחורית',en:'Triceps Dips',t:'triceps',p:'tridip',c:1,eq:'bw',lv:2,pop:3,ic:'dips_tri',
+ m:['יד אחורית'],s:['חזה תחתון','כתף קדמית'],
+ how:['תמוך במקבילים עם גוף זקוף.','רד עד שהמרפקים בזווית של 90°, צמודים לגוף.','דחוף למעלה עד יישור.'],
+ cue:['גוף זקוף, יותר יד אחורית','מרפקים לאחור, לא לצדדים'],
+ err:['ירידה עמוקה מדי','נטייה קדימה, שהופכת את התרגיל לתרגיל חזה'],
+ pro:'מאפשר עומס גבוה בעזרת משקל נוסף. מכונת מקבילים היא חלופה טובה למי שעדיין לא מבצע עם משקל הגוף.'},
+{id:'kickback',he:'קיקבק',en:'Triceps Kickback',t:'triceps',p:'kickback',c:0,eq:'dumbbell',lv:1,pop:3,ic:'kickback',
+ m:['יד אחורית (ראש צידי ומדיאלי)'],s:[],
+ how:['יד וברך נגדית על ספסל, גב ישר.','הזרוע העליונה צמודה לגוף ומקבילה לרצפה.','פשוט את המרפק לאחור עד יישור מלא, וחזור לאט.'],
+ cue:['הזרוע העליונה לא זזה','עצור שנייה ביישור'],
+ err:['תנופה','הורדת הזרוע העליונה'],
+ pro:'הקושי מקסימלי ביישור המלא, בטווח הקצר. בכבל העומס רציף לאורך כל הטווח. מתאים לסיום.'},
+{id:'jm_press',he:'לחיצת JM',en:'JM Press',t:'triceps',p:'lyingext',c:1,eq:'barbell',lv:3,pop:1,ic:'skull',
+ m:['יד אחורית'],s:['חזה','כתף קדמית'],
+ how:['שכב כמו בלחיצת חזה, באחיזה צרה.','הורד את המוט לכיוון הסנטר תוך כיפוף המרפקים קדימה, כשהאמות “נשענות” על הזרועות.','דחוף חזרה למעלה.'],
+ cue:['שילוב של לחיצה צרה ולחיצה צרפתית','התחל במשקל קל'],
+ err:['עומס על המרפק בגלל משקל מוגזם','מסלול לא עקבי'],
+ pro:'פותח על ידי JM Blakley לחיזוק סוף התנועה (הנעילה) בלחיצת חזה. מאפשר עומס כבד על היד האחורית בטווח הבינוני. 3–4 סטים של 6–10, למתאמנים מנוסים בלבד.'},
+/* back */
+{id:'pullup',he:'מתח',en:'Pull-up',t:'back',p:'vpull',c:1,eq:'bw',lv:2,pop:4,ic:'pullup',
+ m:['רחב גבי'],s:['יד קדמית','מעוינים','כתף אחורית'],
+ how:['היתלה על המוט באחיזה מלמעלה, מעט רחבה מהכתפיים.','משוך את המרפקים למטה ולצדדים עד שהסנטר מעל המוט.','רד בשליטה עד יישור כמעט מלא.'],
+ cue:['התחל מהשכמות: הורד אותן לפני שאתה מכופף את המרפקים','החזה עולה לכיוון המוט'],
+ err:['קיפינג ותנופה','חצי טווח'],
+ pro:'מדד מרכזי לכוח יחסי. התקדמות: מתח שלילי, מתח עם גומייה, ואחר כך משקל נוסף. אחיזה הפוכה (Chin-up) מוסיפה עבודה ליד הקדמית.'},
+{id:'lat_pulldown',he:'פולי עליון',en:'Lat Pulldown',t:'back',p:'vpull',c:1,eq:'cable',lv:1,pop:5,ic:'pulldown',
+ m:['רחב גבי'],s:['יד קדמית','טרפז תחתון','כתף אחורית'],
+ how:['שב עם הירכיים מתחת לכרית, באחיזה רחבה.','משוך את המוט לחזה העליון והובל עם המרפקים.','חזור לאט עד מתיחה מלאה למעלה.'],
+ cue:['נטייה קלה לאחור (כ-15°), חזה גבוה','דמיין שאתה מכניס את המרפקים לכיסים האחוריים'],
+ err:['משיכה מאחורי הראש','נדנוד של הגוף'],
+ pro:'מאפשר שליטה בעומס ובטווח, ולכן מתאים לכל הרמות. לדגש על הרחב, מרפקים לכיוון הירכיים. לדגש על הגב העליון, מרפקים לצדדים. מתאים מאוד לעצירה במתיחה.'},
+{id:'close_pulldown',he:'פולי עליון באחיזה צרה',en:'Close-Grip Pulldown',t:'back',p:'vpull',c:1,eq:'cable',lv:1,pop:3,ic:'pulldown',
+ m:['רחב גבי'],s:['יד קדמית','שרירי הזרוע'],
+ how:['ידית V או משולש, אחיזה ניטרלית.','משוך לחזה העליון כשהמרפקים צמודים לגוף.','חזור לאט עד מתיחה מלאה.'],
+ cue:['המרפקים יורדים קרוב לגוף','מתיחה מלאה למעלה'],
+ err:['קריסה של הגב העליון קדימה','נדנוד'],
+ pro:'האחיזה הניטרלית הצרה מאפשרת לרחב טווח ארוך, עם הארכה מלאה של הכתף. משלים היטב את הגרסה הרחבה.'},
+{id:'bb_row',he:'חתירה במוט בהטיה',en:'Barbell Row',t:'back',p:'hrow',c:1,eq:'barbell',lv:2,pop:4,ic:'row_bent',
+ m:['רחב גבי','גב עליון (מעוינים, טרפז)'],s:['כתף אחורית','יד קדמית','זוקפי גו'],
+ how:['הטה את הגוף לזווית של 30°–45° מעל המקביל, ברכיים כפופות קלות.','משוך את המוט לבטן העליונה.','הורד בשליטה עד יישור הידיים.'],
+ cue:['גב ניטרלי לאורך כל הסט','מרפקים לכיוון האגן לדגש על הרחב'],
+ err:['הרמת הגוף כדי להזיז את המשקל','עיגול הגב'],
+ pro:'תרגיל כבד שמחזק גם את זוקפי הגו. זווית הגוף משנה את הדגש: גוף מקביל לרצפה מדגיש את הגב העליון, וגוף זקוף יותר מדגיש את הטרפז. למי שהגב התחתון שלו רגיש, עדיף לבצע חתירה עם תמיכת חזה.'},
+{id:'db_row',he:'חתירה במשקולת ביד אחת',en:'One-Arm DB Row',t:'back',p:'hrow',c:1,eq:'dumbbell',lv:1,pop:5,ic:'row_db',
+ m:['רחב גבי'],s:['גב עליון','כתף אחורית','יד קדמית'],
+ how:['ברך ויד על הספסל, גב ישר ומקביל לרצפה.','משוך את המשקולת לכיוון המותן.','הורד עד מתיחה מלאה.'],
+ cue:['כמו מסור: המרפק נע לאחור ולכיוון הירך','בלי לסובב את הגו'],
+ err:['משיכה לכתף במקום למותן','סיבוב הגוף כדי להרים'],
+ pro:'עבודה ביד אחת עם טווח ארוך מאוד, ומתיחה מלאה של הרחב בתחתית. גרסה מתקדמת: Kroc Row, משקל כבד עם הרבה חזרות.'},
+{id:'cable_row',he:'חתירה בכבל בישיבה',en:'Seated Cable Row',t:'back',p:'hrow',c:1,eq:'cable',lv:1,pop:5,ic:'row_seated',
+ m:['גב עליון','רחב גבי'],s:['כתף אחורית','יד קדמית'],
+ how:['שב עם כפות הרגליים על הפלטה, ברכיים מעט כפופות.','משוך את הידית לבטן וקרב את השכמות.','חזור קדימה עד מתיחה, בלי לעגל את הגב.'],
+ cue:['חזה גבוה בסוף התנועה','תן לשכמות לנוע קדימה במתיחה'],
+ err:['נדנוד קדימה ואחורה','משיכה עם הגב התחתון'],
+ pro:'סוג הידית משנה את הדגש: ידית צרה מדגישה את הרחב, וידית רחבה מדגישה את הגב העליון והכתף האחורית. מתאים לעבודה בטווח מלא, כולל מתיחה של השכמות.'},
+{id:'supported_row',he:'חתירה עם תמיכת חזה',en:'Chest-Supported Row',t:'back',p:'hrow',c:1,eq:'machine',lv:1,pop:3,ic:'row_seated',
+ m:['גב עליון','רחב גבי'],s:['כתף אחורית','יד קדמית'],
+ how:['שכב עם החזה על כרית של ספסל משופע או מכונה.','משוך את המשקולות או הידיות לאחור.','חזור עד מתיחה מלאה.'],
+ cue:['החזה נשאר על הכרית','עצור שנייה בכיווץ'],
+ err:['הרמת החזה מהכרית','משיכה קצרה'],
+ pro:'מבטל את העומס על הגב התחתון ואת התנופה, כך שאפשר לעבוד קרוב לכשל רק עם שרירי הגב. בחירה טובה בשבוע עם דדליפט כבד.'},
+{id:'straight_arm',he:'משיכה בידיים ישרות בכבל',en:'Straight-Arm Pulldown',t:'back',p:'pullover',c:0,eq:'cable',lv:2,pop:3,ic:'straightarm',
+ m:['רחב גבי'],s:['טרס גדול','ראש ארוך של היד האחורית'],
+ how:['גלגלת עליונה עם מוט או חבל, נטייה קלה קדימה.','בידיים כמעט ישרות, משוך את המוט בקשת עד הירכיים.','חזור לאט עד מתיחה מעל הראש.'],
+ cue:['המרפקים נעולים בזווית קבועה','חשוב על הורדת השכמות'],
+ err:['כיפוף המרפקים, שהופך את התרגיל לפשיטה','דחיפה עם הבטן'],
+ pro:'מבודד את הרחב בלי עבודה של היד הקדמית. מתאים כתרגיל הפעלה לפני משיכות או כסיום. עם חבל אפשר לסיים את התנועה מאחורי הירכיים.'},
+{id:'deadlift',early:1,he:'דדליפט',en:'Deadlift',t:'back',p:'hinge',c:1,eq:'barbell',lv:2,pop:4,ic:'deadlift',
+ m:['זוקפי גו','ישבן','ירך אחורית'],s:['רחב גבי','טרפז','ארבע ראשי','אחיזה'],
+ how:['כפות הרגליים ברוחב האגן, המוט מעל אמצע כף הרגל.','אחוז את המוט, הורד את האגן, גב ישר ומתוח, ומתח את המוט לפני ההרמה.','דחוף את הרצפה ועמוד זקוף, כשהמוט צמוד לרגליים.'],
+ cue:['המוט צמוד לגוף לאורך כל הדרך','החזה והאגן עולים יחד'],
+ err:['עיגול הגב התחתון','משיכה בטלטלה'],
+ pro:'מתרגילי הכוח החשובים ביותר, אבל ההתאוששות ממנו ארוכה. לכן כדאי לבצע אותו בתחילת האימון ובנפח נמוך (3–5 חזרות). מאמנים מתאימים את הסגנון למבנה הגוף: קונבנציונלי או סומו.',
+ rx:{reps:['5–8','3–6','1–5']}},
+{id:'backext',he:'פשיטת גב',en:'Back Extension',t:'back',p:'backext',c:0,eq:'bw',lv:1,pop:3,ic:'backext',
+ m:['זוקפי גו','ישבן'],s:['ירך אחורית'],
+ how:['כוון את הכרית לגובה עצמות האגן.','רד קדימה בשליטה עם גב ניטרלי.','עלה עד שהגוף בקו ישר עם הרגליים.'],
+ cue:['עצור בקו ישר, בלי קשת יתר','הידיים על החזה, או משקולת כשמתקדמים'],
+ err:['קשת מוגזמת למעלה','תנופה'],
+ pro:'גב מעוגל מכוון לזוקפי הגו. גב ישר עם כרית נמוכה מכוון לישבן ולירך האחורית. מעולה לחיזוק הגב התחתון בנפח נמוך עד בינוני.'},
+{id:'meadows',he:'חתירת מדואוז',en:'Meadows Row',t:'back',p:'hrow',c:1,eq:'barbell',lv:3,pop:1,ic:'row_bent',
+ m:['רחב גבי','גב עליון'],s:['כתף אחורית','יד קדמית'],
+ how:['מוט בעוגן לנדמיין. עמוד בניצב לקצה המוט.','אחוז את קצה המוט באחיזה מלמעלה, ומשוך עם המרפק לאחור ולמעלה.','הורד עד מתיחה מלאה.'],
+ cue:['הטיה יציבה, היד השנייה על הברך','מרפק מעט רחוק מהגוף'],
+ err:['סיבוב הגוף','משיכה קצרה'],
+ pro:'פותח על ידי ג׳ון מדואוז. הזווית מאפשרת מתיחה עמוקה ועבודה חזקה על הגב העליון והרחב. מומלץ ב-8–12 חזרות, עם רצועות הרמה.'},
+{id:'pendlay',he:'חתירת פנדליי',en:'Pendlay Row',t:'back',p:'hrow',c:1,eq:'barbell',lv:3,pop:1,ic:'row_bent',
+ m:['גב עליון','רחב גבי'],s:['זוקפי גו','כתף אחורית'],
+ how:['הגוף מקביל לרצפה, המוט על הרצפה מתחת לחזה.','משוך את המוט בתנועה מתפרצת לבטן העליונה.','החזר את המוט לרצפה ועצור לפני כל חזרה.'],
+ cue:['כל חזרה מתחילה מאפס','הגב נשאר מקביל לרצפה'],
+ err:['הרמת הגוף תוך כדי משיכה','הקפצת המוט מהרצפה'],
+ pro:'מפתח כוח מתפרץ מנקודת עצירה. מאמני כוח משתמשים בו לשיפור המשיכה ולחיזוק הגב העליון. 4–5 סטים של 5.'},
+/* biceps */
+{id:'bb_curl',he:'כפיפת מרפקים במוט',en:'Barbell Curl',t:'biceps',p:'curl',c:0,eq:'barbell',lv:1,pop:5,ic:'curl',
+ m:['יד קדמית'],s:['ברכיאליס','ברכיורדיאליס'],
+ how:['עמוד עם מוט באחיזה מלמטה, ברוחב הכתפיים.','כופף את המרפקים עד שהמוט מגיע לגובה הכתפיים.','הורד לאט עד יישור כמעט מלא.'],
+ cue:['מרפקים צמודים לגוף','בלי תנופה מהגב'],
+ err:['נדנוד הגוף','חצי טווח למטה'],
+ pro:'מאפשר עומס גבוה לאורך כל הטווח. מוט EZ מקל על פרקי הידיים. למתקדמים, מעט תנופה מבוקרת בחזרות האחרונות היא טכניקה לגיטימית.'},
+{id:'db_curl',he:'כפיפת מרפקים במשקולות',en:'Dumbbell Curl',t:'biceps',p:'curl',c:0,eq:'dumbbell',lv:1,pop:5,ic:'curl_db',
+ m:['יד קדמית'],s:['ברכיאליס'],
+ how:['משקולות לצד הגוף, כפות הידיים פונות פנימה.','כופף את המרפק וסובב את כף היד למעלה (סופינציה).','הורד לאט.'],
+ cue:['הזרת מסתובבת כלפי חוץ בסוף התנועה','אפשר לסירוגין'],
+ err:['תנופה מהכתף','סיבוב חלקי'],
+ pro:'הסופינציה מגייסת את הדו-ראשי, שהוא גם מסובב האמה. עבודה ביד אחת מאזנת בין הידיים.'},
+{id:'hammer',he:'כפיפת פטישים',en:'Hammer Curl',t:'biceps',p:'hammer',c:0,eq:'dumbbell',lv:1,pop:4,ic:'hammer',
+ m:['ברכיאליס','ברכיורדיאליס'],s:['יד קדמית'],
+ how:['משקולות באחיזה ניטרלית, אגודלים למעלה.','כופף את המרפקים בלי לסובב את כף היד.','הורד לאט.'],
+ cue:['כף היד נשארת ניטרלית לאורך כל התנועה','מרפקים צמודים לגוף'],
+ err:['תנופה','מרפקים שנעים קדימה'],
+ pro:'הברכיאליס נמצא מתחת לדו-ראשי ודוחף אותו החוצה, כך שהזרוע נראית עבה יותר. מחזק גם את האמה. אפשר לבצע לרוחב הגוף, לכיוון החזה.'},
+{id:'incline_curl',he:'כפיפה בספסל משופע',en:'Incline DB Curl',t:'biceps',p:'stretchcurl',c:0,eq:'dumbbell',lv:2,pop:3,ic:'incline_curl',
+ m:['יד קדמית (ראש ארוך)'],s:['ברכיאליס'],
+ how:['ספסל בשיפוע של 45°–60°, הידיים תלויות ישר למטה.','כופף את המרפקים בלי להזיז את הזרועות קדימה.','הורד לאט עד יישור מלא.'],
+ cue:['הזרועות נשארות מאחורי הגוף','משקל קל יותר מבעמידה'],
+ err:['הבאת המרפקים קדימה','טווח חלקי'],
+ pro:'הכתף במנח של יישור, ולכן הראש הארוך של הדו-ראשי נמתח. עבודה בטווח הארוך קשורה להיפרטרופיה טובה יותר. 10–12 חזרות.'},
+{id:'preacher',he:'כפיפה בכיסא כומר',en:'Preacher Curl',t:'biceps',p:'preacher',c:0,eq:'ez',lv:1,pop:4,ic:'preacher',
+ m:['יד קדמית (ראש קצר)','ברכיאליס'],s:[],
+ how:['שב עם הזרועות על הכרית, בית השחי צמוד לראש הכרית.','כופף עד כיווץ.','הורד לאט עד כמעט יישור מלא.'],
+ cue:['בלי לנעול בתחתית עם משקל כבד','שליטה מלאה בירידה'],
+ err:['הרמת הישבן מהמושב','נפילה חופשית בתחתית'],
+ pro:'העומס מקסימלי בתחתית, בטווח הארוך של המרפק. מצוין להיפרטרופיה, אבל דורש זהירות במרפק. במכונה אפשר להוסיף חזרות חלקיות בתחתית אחרי כשל.'},
+{id:'cable_curl',he:'כפיפה בכבל',en:'Cable Curl',t:'biceps',p:'curl',c:0,eq:'cable',lv:1,pop:3,ic:'curl',
+ m:['יד קדמית'],s:['ברכיאליס'],
+ how:['גלגלת נמוכה עם מוט או חבל.','כופף את המרפקים עד כיווץ.','הורד לאט.'],
+ cue:['צעד אחורה מהגלגלת, כדי שיהיה עומס גם בתחתית','המרפקים במקום'],
+ err:['הטיית הגוף לאחור','מרפקים שנעים קדימה'],
+ pro:'מתח קבוע לאורך כל הטווח. מתאים לסיום האימון בסטים ארוכים, דרופ-סטים או מנוחות קצרות.'},
+{id:'bayesian',he:'כפיפת בייסיאן',en:'Bayesian Cable Curl',t:'biceps',p:'stretchcurl',c:0,eq:'cable',lv:3,pop:1,ic:'bayesian',
+ m:['יד קדמית (ראש ארוך)'],s:[],
+ how:['גלגלת נמוכה. עמוד עם הגב אליה, והיד מאחורי הגוף.','כופף את המרפק בלי להזיז את הזרוע קדימה.','חזור עד מתיחה מלאה מאחורי הגוף.'],
+ cue:['עמידת פסיעה יציבה','הזרוע נשארת מאחורי קו הגוף'],
+ err:['מרפק שנע קדימה','משקל כבד מדי'],
+ pro:'משלב יישור כתף עם עומס של כבל, ולכן נותן עומס משמעותי בטווח הארוך של הדו-ראשי. השם מגיע מ-Bayesian Bodybuilding של מנו הנסלמנס. 10–15 חזרות לכל יד.'},
+{id:'spider_curl',he:'כפיפת עכביש',en:'Spider Curl',t:'biceps',p:'preacher',c:0,eq:'dumbbell',lv:2,pop:2,ic:'preacher',
+ m:['יד קדמית (ראש קצר)'],s:['ברכיאליס'],
+ how:['שכב עם החזה על ספסל משופע, הידיים תלויות אנכית.','כופף את המרפקים עד כיווץ מלא.','הורד לאט עד יישור.'],
+ cue:['הזרועות אנכיות לרצפה','עצור שנייה בכיווץ'],
+ err:['תנופה מהכתפיים','ירידה חלקית'],
+ pro:'הכתף בכיפוף, כך שהעומס מקסימלי בטווח הקצר, בכיווץ. משלים היטב את הכפיפה בשיפוע, שמעמיסה במתיחה.'},
+{id:'concentration',he:'כפיפה בריכוז',en:'Concentration Curl',t:'biceps',p:'concentration',c:0,eq:'dumbbell',lv:1,pop:2,ic:'curl_db',
+ m:['יד קדמית'],s:['ברכיאליס'],
+ how:['שב על ספסל, המרפק נשען על הירך הפנימית.','כופף עד כיווץ.','הורד לאט.'],
+ cue:['כיווץ מקסימלי בראש התנועה','קצב איטי'],
+ err:['הזזת הגוף','מנוחה בתחתית'],
+ pro:'מאפשר ריכוז מלא ביד אחת. שימושי לתיקון חוסר איזון בין הידיים.'},
+/* legs */
+{id:'squat',early:1,he:'סקוואט',en:'Back Squat',t:'quads',p:'squat',c:1,eq:'barbell',lv:2,pop:5,ic:'squat',
+ m:['ארבע ראשי','ישבן'],s:['מקרבים','זוקפי גו','ליבה'],
+ how:['המוט על הטרפז העליון, רגליים ברוחב הכתפיים.','רד בכיפוף של הברכיים והאגן יחד, עד שהירכיים מקבילות לרצפה או נמוכות יותר.','דחוף את הרצפה ועלה עם חזה גבוה.'],
+ cue:['ברכיים בכיוון האצבעות','מתח את הבטן (ברייסינג) לפני כל חזרה'],
+ err:['ברכיים שקורסות פנימה','עקבים שמתרוממים'],
+ pro:'מלך תרגילי הרגליים. עומק מלא מגייס יותר ישבן ומקרבים. מוט נמוך מדגיש את הירך האחורית והישבן, ומוט גבוה מדגיש את הארבע ראשי. עקבים מוגבהים מגבירים את הדגש על הארבע ראשי.'},
+{id:'leg_press',he:'לחיצת רגליים',en:'Leg Press',t:'quads',p:'legpress',c:1,eq:'machine',lv:1,pop:5,ic:'legpress',
+ m:['ארבע ראשי','ישבן'],s:['מקרבים'],
+ how:['גב צמוד לכרית, רגליים ברוחב האגן על הפלטה.','שחרר את הנעילה ורד עד שהברכיים בזווית של 90° או עמוק יותר.','דחוף בלי לנעול את הברכיים.'],
+ cue:['האגן נשאר צמוד למושב','רגליים נמוכות על הפלטה מדגישות את הארבע ראשי'],
+ err:['נעילת ברכיים','אגן שמתרומם בתחתית'],
+ pro:'מאפשר עומס גבוה עם עייפות כללית נמוכה יחסית לסקוואט. מצוין להיפרטרופיה של הרגליים. רגליים גבוהות ורחבות על הפלטה מדגישות את הישבן והמקרבים.'},
+{id:'hack_squat',he:'האק סקוואט',en:'Hack Squat',t:'quads',p:'squat',c:1,eq:'machine',lv:1,pop:3,ic:'squat',
+ m:['ארבע ראשי'],s:['ישבן'],
+ how:['הכתפיים מתחת לכריות, הגב צמוד.','רד עמוק בשליטה.','דחוף למעלה דרך כל כף הרגל.'],
+ cue:['ירידה עמוקה. זה בסדר שהברכיים עוברות את האצבעות','הגב צמוד לכרית'],
+ err:['טווח קצר','עקבים שמתרוממים'],
+ pro:'מבודד את הארבע ראשי ביציבות גבוהה. מצוין לעבודה קרובה לכשל ולחזרות רבות. אפשר להחליף בו את הסקוואט כשהגב התחתון עייף.'},
+{id:'goblet',he:'גובלט סקוואט',en:'Goblet Squat',t:'quads',p:'squat',c:1,eq:'dumbbell',lv:1,pop:3,ic:'goblet',
+ m:['ארבע ראשי','ישבן'],s:['ליבה','גב עליון'],
+ how:['אחוז משקולת אנכית מול החזה.','רד לסקוואט עמוק, כשהמרפקים בין הברכיים.','עלה עם חזה זקוף.'],
+ cue:['המשקל מלפנים עוזר לשמור על גב זקוף','ירידה עמוקה'],
+ err:['קריסה של הגב העליון','ברכיים שקורסות פנימה'],
+ pro:'כלי מצוין ללימוד תנועת הסקוואט וכחימום. המשקל מלפנים מאזן את הגוף ומאפשר עומק. העומס מוגבל, ולכן מתאים למתחילים או כתרגיל עזר.'},
+{id:'bss',he:'סקוואט בולגרי',en:'Bulgarian Split Squat',t:'quads',p:'split',c:1,eq:'dumbbell',lv:2,pop:4,ic:'bss',
+ m:['ארבע ראשי','ישבן'],s:['מקרבים','מייצבי אגן'],
+ how:['כף הרגל האחורית על ספסל, הרגל הקדמית צעד גדול קדימה.','רד עד שהברך האחורית כמעט נוגעת ברצפה.','דחוף דרך הרגל הקדמית.'],
+ cue:['נטייה קדימה מדגישה את הישבן, גוף זקוף מדגיש את הארבע ראשי','קודם יציבות, אחר כך משקל'],
+ err:['צעד קצר מדי','ברך קדמית שקורסת פנימה'],
+ pro:'תרגיל של רגל אחת, קשה ויעיל במיוחד. העומס נמוך יחסית, ולכן הגב נחסך. מחקרים מראים היפרטרופיה דומה לזו של סקוואט. 3 סטים של 8–12 לכל רגל.'},
+{id:'lunges',he:'מכרעים בהליכה',en:'Walking Lunges',t:'quads',p:'split',c:1,eq:'dumbbell',lv:1,pop:4,ic:'lunge',
+ m:['ארבע ראשי','ישבן'],s:['מקרבים','ליבה'],
+ how:['משקולות לצד הגוף.','צעד ארוך קדימה ורד עד שהברך האחורית קרובה לרצפה.','דחוף קדימה לצעד הבא.'],
+ cue:['גו זקוף','צעד ארוך מדגיש את הישבן'],
+ err:['צעדים קצרים','ברך קדמית שקורסת פנימה'],
+ pro:'משלב יציבות, כוח וסיבולת. מתאים לסוף אימון רגליים. מכרע לאחור (Reverse Lunge) עדין יותר לברכיים.'},
+{id:'leg_ext',he:'פשיטת ברכיים',en:'Leg Extension',t:'quads',p:'legext',c:0,eq:'machine',lv:1,pop:5,ic:'legext',
+ m:['ארבע ראשי (כולל ישר הירך)'],s:[],
+ how:['כוון את המושב כך שהברך מול ציר המכונה.','פשוט את הברכיים עד יישור מלא.','הורד לאט.'],
+ cue:['עצור שנייה ביישור','נטייה לאחור מגבירה את העבודה של ישר הירך'],
+ err:['ציר לא מכוון','תנופה'],
+ pro:'הדרך הטובה ביותר לבודד את ישר הירך (Rectus femoris), שלא עובד הרבה בסקוואט. נטייה לאחור מותחת אותו גם על מפרק האגן. מתאים לסוף האימון או כחימום לברכיים.'},
+{id:'front_squat',early:1,he:'סקוואט קדמי',en:'Front Squat',t:'quads',p:'squat',c:1,eq:'barbell',lv:3,pop:2,ic:'goblet',
+ m:['ארבע ראשי'],s:['ישבן','גב עליון','ליבה'],
+ how:['המוט על הכתפיים הקדמיות, מרפקים גבוהים.','רד עמוק עם גו זקוף.','עלה תוך שמירה על המרפקים גבוהים.'],
+ cue:['מרפקים גבוהים לאורך כל החזרה','גוף זקוף ככל האפשר'],
+ err:['מרפקים שיורדים, והמוט מתגלגל קדימה','עיגול הגב העליון'],
+ pro:'מדגיש את הארבע ראשי ודורש גב עליון חזק, עם פחות עומס על הגב התחתון. דורש גמישות בפרקי הידיים ובקרסוליים.'},
+{id:'sissy',he:'סיסי סקוואט',en:'Sissy Squat',t:'quads',p:'legext',c:0,eq:'bw',lv:3,pop:1,ic:'legext',
+ m:['ארבע ראשי (ישר הירך)'],s:[],
+ how:['עמוד ואחוז במוט לייצוב, עקבים מורמים.','הטה את הגוף לאחור בקו ישר מהברך לראש, והבא את הברכיים קדימה.','חזור למעלה בעזרת יישור הברכיים.'],
+ cue:['קו ישר מהברך ועד הכתף','התחל בטווח חלקי'],
+ err:['כיפוף באגן','ירידה מהירה מדי'],
+ pro:'מעמיס את הארבע ראשי בטווח ארוך מאוד, כולל את ישר הירך. דורש ברכיים בריאות והתקדמות הדרגתית. אפשר לבצע במתקן ייעודי או עם עזרה.'},
+{id:'rdl',he:'דדליפט רומני',en:'Romanian Deadlift',t:'hams',p:'hinge',c:1,eq:'barbell',lv:2,pop:5,ic:'rdl',
+ m:['ירך אחורית','ישבן'],s:['זוקפי גו','אחיזה'],
+ how:['עמוד זקוף עם המוט, ברכיים כפופות קלות.','דחוף את האגן לאחור והורד את המוט לאורך הרגליים, עד מתיחה בירך האחורית.','עלה תוך כדי דחיפת האגן קדימה.'],
+ cue:['המוט “מגלח” את הירכיים','גב ישר, זווית הברכיים לא משתנה'],
+ err:['כיפוף ברכיים שהופך את התרגיל לדדליפט רגיל','עיגול הגב'],
+ pro:'התרגיל המרכזי לירך האחורית בטווח הארוך, בתפקידה כמיישרת אגן. העומק נקבע לפי הגמישות, לא לפי הרצפה. עם משקולות, אפשר לבצע גם על רגל אחת.'},
+{id:'lying_curl',he:'כפיפת ברכיים בשכיבה',en:'Lying Leg Curl',t:'hams',p:'legcurl',c:0,eq:'machine',lv:1,pop:5,ic:'legcurl',
+ m:['ירך אחורית'],s:['תאומים'],
+ how:['שכב על הבטן, הכרית מעל העקבים.','כופף את הברכיים עד כיווץ.','הורד לאט.'],
+ cue:['האגן צמוד לכרית','האצבעות מכוונות לשוק'],
+ err:['אגן שמתרומם','ירידה מהירה'],
+ pro:'מבודד את הירך האחורית ככופפת ברך. לגרסה בישיבה יש יתרון: כיפוף האגן מותח את הירך האחורית, וזה קשור להיפרטרופיה טובה יותר.'},
+{id:'seated_curl',he:'כפיפת ברכיים בישיבה',en:'Seated Leg Curl',t:'hams',p:'legcurl',c:0,eq:'machine',lv:1,pop:4,ic:'legcurl',
+ m:['ירך אחורית'],s:[],
+ how:['שב עם הכרית העליונה מעל הברכיים והכרית התחתונה מאחורי העקבים.','כופף את הברכיים למטה ולאחור.','חזור לאט עד יישור.'],
+ cue:['נטייה קלה קדימה מגדילה את המתיחה','שליטה מלאה'],
+ err:['כרית ירכיים רופפת','טווח קצר'],
+ pro:'בישיבה, הירך האחורית נמתחת גם על מפרק האגן. מחקר של Maeo ושותפים (2021) מצא היפרטרופיה גדולה יותר בכפיפה בישיבה מאשר בשכיבה. מומלץ כבחירה ראשונה.'},
+{id:'nordic',he:'נורדיק',en:'Nordic Curl',t:'hams',p:'nordic',c:0,eq:'bw',lv:3,pop:1,ic:'nordic',
+ m:['ירך אחורית'],s:['ישבן','תאומים'],
+ how:['כרע על כרית, העקבים מקובעים.','רד קדימה לאט, בקו ישר מהברך ועד הראש.','בלום עם הידיים ודחוף חזרה למעלה.'],
+ cue:['ירידה איטית ככל האפשר (אקסצנטרית)','אגן ישר'],
+ err:['כיפוף באגן','נפילה מהירה'],
+ pro:'הוכח כמפחית פציעות בירך האחורית אצל ספורטאים. אינטנסיבי מאוד, ולכן מתחילים במעט חזרות (3 סטים של 3–5). אפשר להקל בעזרת גומייה.',
+ rx:{reps:['3–5','3–6','4–8']}},
+{id:'good_morning',early:1,he:'גוד מורנינג',en:'Good Morning',t:'hams',p:'hinge',c:1,eq:'barbell',lv:3,pop:1,ic:'rdl',
+ m:['ירך אחורית','זוקפי גו'],s:['ישבן'],
+ how:['המוט על הגב העליון, כמו בסקוואט.','דחוף את האגן לאחור והטה את הגוף קדימה עם גב ישר.','חזור לעמידה.'],
+ cue:['משקל קל עד בינוני','ברכיים רכות'],
+ err:['עיגול הגב','משקל כבד מדי'],
+ pro:'מעמיס את הירך האחורית ואת זוקפי הגו עם זרוע מומנט ארוכה. מרימי כוח משתמשים בו לחיזוק המנח בסקוואט. דורש שליטה טכנית גבוהה.'},
+{id:'hip_thrust',he:'היפ טראסט',en:'Hip Thrust',t:'glutes',p:'thrust',c:1,eq:'barbell',lv:1,pop:5,ic:'hipthrust',
+ m:['ישבן גדול'],s:['ירך אחורית','ארבע ראשי'],
+ how:['הגב העליון על הספסל, המוט על האגן עם כרית.','דחוף את האגן למעלה עד קו ישר מהברכיים ועד הכתפיים.','הורד בשליטה.'],
+ cue:['סנטר לחזה, מבט קדימה','השוקיים אנכיות בראש התנועה'],
+ err:['קשת בגב במקום יישור של האגן','רגליים רחוקות מדי'],
+ pro:'העומס מקסימלי בכיווץ, ביישור מלא של האגן. משלים היטב תרגילים שמעמיסים במתיחה, כמו סקוואט ודדליפט רומני. עצור 1–2 שניות למעלה.'},
+{id:'abduction',he:'הרחקת ירכיים במכונה',en:'Hip Abduction',t:'glutes',p:'abduction',c:0,eq:'machine',lv:1,pop:4,ic:'abduction',
+ m:['ישבן בינוני'],s:['ישבן קטן','מותח הפסיה (TFL)'],
+ how:['שב כשהכריות מחוץ לברכיים.','דחוף החוצה עד טווח מלא.','חזור לאט.'],
+ cue:['נטייה קדימה מדגישה את החלק העליון של הישבן','עצור בפתיחה'],
+ err:['תנופה','טווח קצר'],
+ pro:'מבודד את הישבן הבינוני, שאחראי ליציבות האגן ולמראה המעוגל בחלק העליון. מגיב טוב לנפח גבוה ולחזרות רבות.'},
+{id:'glute_kb',he:'בעיטה לאחור בכבל',en:'Cable Glute Kickback',t:'glutes',p:'gkick',c:0,eq:'cable',lv:1,pop:3,ic:'glute_kb',
+ m:['ישבן גדול'],s:['ירך אחורית'],
+ how:['רצועה על הקרסול, נטייה קלה קדימה.','בעט לאחור עד יישור מלא של האגן.','חזור לאט.'],
+ cue:['בלי קשת בגב התחתון','האגן פונה קדימה'],
+ err:['סיבוב של האגן','בעיטה עם הגב'],
+ pro:'תרגיל בידוד לישבן, רגל אחת בכל פעם. מתאים לסיום, עם מנוחות קצרות.'},
+{id:'standing_calf',he:'הרמת עקבים בעמידה',en:'Standing Calf Raise',t:'calves',p:'calf',c:0,eq:'machine',lv:1,pop:4,ic:'calf',
+ m:['תאומים (Gastrocnemius)'],s:['סוליה'],
+ how:['הכריות על הכתפיים, כרית כף הרגל על קצה המדרגה.','הורד את העקבים עד מתיחה עמוקה.','עלה על קצות האצבעות עד כיווץ מלא.'],
+ cue:['עצור 1–2 שניות במתיחה','ברכיים ישרות אבל לא נעולות'],
+ err:['קפיצות קצרות','טווח חלקי'],
+ pro:'כשהברך ישרה, התאומים עובדים יותר. שרירי השוק מגיבים לעבודה בטווח הארוך, ולכן העצירה בתחתית חשובה מאוד. 3–4 סטים של 10–15.'},
+{id:'seated_calf',he:'הרמת עקבים בישיבה',en:'Seated Calf Raise',t:'calves',p:'calf',c:0,eq:'machine',lv:1,pop:3,ic:'calf',
+ m:['סוליה (Soleus)'],s:['תאומים'],
+ how:['שב עם הכרית על הירכיים, כרית כף הרגל על הקצה.','הורד את העקבים עד מתיחה.','עלה עד כיווץ מלא.'],
+ cue:['עצירה בתחתית','קצב איטי'],
+ err:['תנופה בעזרת הידיים','טווח חלקי'],
+ pro:'כשהברך כפופה, התאומים מקוצרים והסוליה עושה יותר מהעבודה. משלים את הגרסה בעמידה.'},
+/* core */
+{id:'plank',he:'פלאנק',en:'Plank',t:'core',p:'antiext',c:0,eq:'bw',lv:1,pop:4,ic:'plank',
+ m:['בטן רוחבית','ישר הבטן'],s:['ישבן','כתפיים'],
+ how:['האמות על הרצפה, המרפקים מתחת לכתפיים.','הגוף בקו ישר מהראש ועד העקבים.','החזק, ונשום כרגיל.'],
+ cue:['כווץ את הישבן ומשוך את הצלעות לכיוון האגן','דחוף את הרצפה עם האמות'],
+ err:['אגן שוקע','ישבן גבוה מדי'],
+ pro:'תרגיל אנטי-אקסטנשן. במקום להאריך את הזמן, הפוך אותו לקשה יותר: RKC Plank (כיווץ מקסימלי ל-10–20 שניות), הזזת הידיים קדימה או משקל על הגב.',
+ rx:{reps:['20–30 שנ׳','30–45 שנ׳','10–20 שנ׳ RKC']}},
+{id:'hanging_raise',he:'הרמות רגליים בתלייה',en:'Hanging Leg Raise',t:'core',p:'legraise',c:0,eq:'bw',lv:2,pop:4,ic:'hanging',
+ m:['ישר הבטן (חלק תחתון)','מכופפי ירך'],s:['אלכסוניים'],
+ how:['היתלה על המוט עם ידיים ישרות.','הרם את הרגליים עד המקביל או מעליו, וגלגל את האגן.','הורד לאט, בלי תנופה.'],
+ cue:['גלגל את האגן למעלה בסוף התנועה','שליטה מלאה בירידה'],
+ err:['תנופה','הרמה רק עם מכופפי הירך, בלי גלגול האגן'],
+ pro:'גלגול האגן (Posterior pelvic tilt) הוא מה שמגייס את הבטן, ולא רק את מכופפי הירך. גרסה קלה: ברכיים כפופות. גרסה קשה: Toes-to-bar.'},
+{id:'cable_crunch',he:'כפיפות בטן בכבל',en:'Cable Crunch',t:'core',p:'crunch',c:0,eq:'cable',lv:1,pop:3,ic:'cable_crunch',
+ m:['ישר הבטן'],s:['אלכסוניים'],
+ how:['כרע מול גלגלת עליונה, החבל ליד הראש.','כופף את עמוד השדרה ומשוך את המרפקים לכיוון הברכיים.','חזור לאט עד מתיחה.'],
+ cue:['האגן נשאר במקום, רק הגו מתכופף','נשוף אוויר בכיווץ'],
+ err:['משיכה עם הידיים','ירידה עם האגן'],
+ pro:'מאפשר עומס הדרגתי, כמו בכל שריר אחר. 10–15 חזרות במשקל משמעותי מועילות יותר מעשרות כפיפות בטן.'},
+{id:'ab_wheel',he:'גלגלת בטן',en:'Ab Wheel Rollout',t:'core',p:'antiext',c:0,eq:'bw',lv:2,pop:3,ic:'abwheel',
+ m:['בטן רוחבית','ישר הבטן'],s:['רחב גבי','כתפיים'],
+ how:['כרע כשהגלגלת מתחת לכתפיים.','גלגל קדימה עד שהגוף כמעט מקביל לרצפה, בלי קשת בגב.','חזור בעזרת כיווץ הבטן.'],
+ cue:['גב תחתון שטוח, אגן מגולגל','התחל בטווח קצר'],
+ err:['קשת בגב התחתון','חזרה עם האגן לפני הגוף'],
+ pro:'אתגר אנטי-אקסטנשן קשה מאוד, שמעמיס את הבטן בטווח הארוך. התקדמות: גלגלת מעמידה. כדאי כתרגיל בטן מרכזי למתקדמים.'},
+{id:'pallof',he:'פאלוף פרס',en:'Pallof Press',t:'core',p:'antirot',c:0,eq:'cable',lv:2,pop:2,ic:'pallof',
+ m:['אלכסוניים','בטן רוחבית'],s:['ישבן'],
+ how:['עמוד בצד הגלגלת, הידית מול החזה.','דחוף את הידיים קדימה עד יישור, והתנגד לסיבוב.','החזק 2 שניות וחזור.'],
+ cue:['האגן והכתפיים פונים קדימה','ככל שאתה רחוק מהגלגלת, התרגיל קשה יותר'],
+ err:['סיבוב הגוף לכיוון הכבל','עמידה צרה'],
+ pro:'אנטי-רוטציה: מאמן את הליבה למנוע תנועה, שזה תפקידה העיקרי בספורט ובהרמות כבדות. מתאים לחימום או לסיום.',
+ rx:{reps:['8–10 לכל צד','10–12 לכל צד','10 × 3 שנ׳ לכל צד']}},
+{id:'crunch',he:'כפיפות בטן',en:'Crunch',t:'core',p:'crunch',c:0,eq:'bw',lv:1,pop:3,ic:'crunch',
+ m:['ישר הבטן'],s:[],
+ how:['שכב עם ברכיים כפופות, הידיים ליד הראש.','הרם את השכמות מהרצפה בכיפוף של עמוד השדרה.','הורד לאט.'],
+ cue:['הצלעות מתקרבות לאגן','הסנטר לא נצמד לחזה'],
+ err:['משיכת הראש עם הידיים','תנופה'],
+ pro:'תרגיל בסיסי לכיפוף הגו. כדי להתקדם, הוסף משקל או עבור לכפיפות בכבל.'}
+];
+const EX=Object.fromEntries(EXS.map(e=>[e.id,e]));
+
+/* ---------- splits: ordered phases with exercise-count targets ---------- */
+const SPLITS={
+  A:{badge:'A',name:'חזה, כתפיים, יד אחורית',ph:[
+    {k:['chest'],n:3,he:'חזה',def:'החזה',mix:'חזה'},
+    {k:['shoulders'],n:2,he:'כתפיים',def:'הכתפיים',mix:'כתפיים'},
+    {k:['triceps'],n:2,he:'יד אחורית',def:'היד האחורית',mix:'יד אחורית'},
+    {k:['core','reardelt'],n:1,he:'סיום',def:'הסיום',mix:'תרגיל סיום'}]},
+  B:{badge:'B',name:'גב, יד קדמית, רגליים',ph:[
+    {k:['back'],n:3,he:'גב',def:'הגב',mix:'גב'},
+    {k:['reardelt'],n:1,he:'כתף אחורית',def:'הכתף האחורית',mix:'כתף אחורית'},
+    {k:['biceps'],n:2,he:'יד קדמית',def:'היד הקדמית',mix:'יד קדמית'},
+    {k:['quads','hams','glutes'],n:2,he:'רגליים',def:'הרגליים',mix:'רגליים'},
+    {k:['calves','core'],n:1,he:'סיום',def:'הסיום',mix:'תרגיל סיום'}]},
+  C:{badge:'C',name:'רגליים וישבן',ph:[
+    {k:['quads'],n:2,he:'ארבע ראשי',def:'הארבע ראשי',mix:'ארבע ראשי'},
+    {k:['hams'],n:2,he:'ירך אחורית',def:'הירך האחורית',mix:'ירך אחורית'},
+    {k:['glutes'],n:1,he:'ישבן',def:'הישבן',mix:'ישבן'},
+    {k:['calves'],n:1,he:'תאומים',def:'התאומים',mix:'תאומים'},
+    {k:['core'],n:1,he:'בטן',def:'הבטן',mix:'בטן'}]},
+  F:{badge:'גוף מלא',name:'גוף מלא',ph:[
+    {k:['quads'],n:1,he:'רגליים',def:'הרגליים',mix:'רגליים'},
+    {k:['chest'],n:1,he:'חזה',def:'החזה',mix:'חזה'},
+    {k:['back'],n:1,he:'גב',def:'הגב',mix:'גב'},
+    {k:['hams','glutes'],n:1,he:'ירך אחורית וישבן',def:'הירך האחורית והישבן',mix:'ירך אחורית או ישבן'},
+    {k:['shoulders'],n:1,he:'כתפיים',def:'הכתפיים',mix:'כתפיים'},
+    {k:['biceps','triceps'],n:2,he:'ידיים',def:'הידיים',mix:'ידיים'},
+    {k:['core'],n:1,he:'בטן',def:'הבטן',mix:'בטן'}]}
+};
+const SPLIT_OF={chest:'A',shoulders:'A',triceps:'A',back:'B',biceps:'B',reardelt:'B',quads:'C',hams:'C',glutes:'C',calves:'C'};
+
+/* ---------- suggestion engine ---------- */
+function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}h^=h>>>15;h=Math.imul(h,2246822507);h^=h>>>13;return (h>>>0)/4294967296}
+function activeSplit(st){
+  if(st.split!=='auto') return st.split;
+  for(const d of st.done){const s=SPLIT_OF[EX[d.id].t];if(s) return s}
+  return null;
+}
+function phasesOf(st,sid){
+  return SPLITS[sid].ph.map((ph,i)=>{
+    let n=ph.n;if(st.level===0&&n>=3) n--;
+    const d=st.done.filter(x=>ph.k.includes(EX[x.id].t)).length;
+    return Object.assign({},ph,{n,d,i});
+  });
+}
+function ctxOf(st){
+  const done=st.done.map(d=>EX[d.id]);
+  return {ids:new Set(st.done.map(d=>d.id)),pats:new Set(done.map(e=>e.p)),lastEq:done.length?done[done.length-1].eq:null,prev:new Set(st.prev||[])};
+}
+function scoreEx(st,ctx,e,ph){
+  if(ctx.ids.has(e.id)) return -1e9;
+  const L=st.level;
+  if(L===0&&e.lv===3) return -1e9;
+  let s=e.pop;
+  if(L===0) s+=e.lv===1?1:-1.5;
+  else if(L===1) s+=e.lv===3?-0.8:0;
+  else s+=e.lv===3?2.2:e.lv===1?-0.4:0.4;
+  const pd=ph.d,first=ph.i===0;
+  if(e.c) s+=pd===0?(first?3:1.5):pd===1?0.8:-1.2;
+  else s+=pd===0?(first?-2.5:-0.5):pd===1?0.6:1.8;
+  if(ctx.pats.has(e.p)) s-=4.5;
+  if(ctx.lastEq&&ctx.lastEq===e.eq) s-=0.6;
+  s+=hash(e.id+'|'+st.zap+'|'+st.done.length+'|'+st.seed)*(st.zap?4:0.3);
+  if(ctx.prev.has(e.id)) s-=6;
+  if(e.early&&!(first&&pd===0)) s-=5;
+  return s;
+}
+function pool(st,ctx,ph){return EXS.filter(e=>ph.k.includes(e.t)).map(e=>({ex:e,s:scoreEx(st,ctx,e,ph)})).filter(c=>c.s>-1e8)}
+function pickFrom(cands,k,pc,used){
+  const out=[],rest=cands.filter(c=>!used.has(c.ex.id));
+  while(out.length<k&&rest.length){
+    let bi=0,bs=-1e9;
+    rest.forEach((c,i)=>{const v=c.s-4*(pc[c.ex.p]||0);if(v>bs){bs=v;bi=i}});
+    const c=rest.splice(bi,1)[0];out.push(c);used.add(c.ex.id);pc[c.ex.p]=(pc[c.ex.p]||0)+1;
+  }
+  return out;
+}
+function whyCur(ctx,e,ph){
+  const w=PAT[e.p]?PAT[e.p][1]:'';
+  if(ph.d===0&&e.c) return ph.i===0?'תרגיל מורכב שכדאי לעשות ראשון, כשהשריר עוד רענן.':`תרגיל מורכב לפתיחת שלב ${ph.def}.`;
+  if(!ctx.pats.has(e.p)&&ph.d>0&&w) return w;
+  if(!e.c&&ph.d>=1) return `תרגיל בידוד לסיום שלב ${ph.def}.`;
+  return w||`עוד תרגיל ל${ph.he}.`;
+}
+function whyNext(cur,nx){
+  if(cur.d===0) return `שלב ${cur.def} עוד לפניך, אבל אפשר לשלב ${nx.mix} כבר עכשיו.`;
+  const did=cur.d===1?`עשית תרגיל ${cur.he} אחד`:`עשית ${cur.d} תרגילי ${cur.he}`;
+  return `${did} מתוך ${cur.n}. אפשר כבר לשלב ${nx.mix}.`;
+}
+function suggest(st){
+  const ctx=ctxOf(st),sid=activeSplit(st),pc={},used=new Set();
+  if(!sid){
+    const items=[];
+    ['A','B','C'].forEach(k=>{
+      const ph0=Object.assign({},SPLITS[k].ph[0],{d:0,i:0});
+      pickFrom(pool(st,ctx,ph0),2,pc,used).forEach(c=>items.push({ex:c.ex,kind:'open',badge:k,
+        reason:`פותח את אימון ${k} (${SPLITS[k].name}). אחרי שתסמן אותו, ההצעות ימשיכו לפי אימון ${k}.`}));
+    });
+    return {mode:'open',sid:null,phases:[],cur:null,items};
+  }
+  const phs=phasesOf(st,sid);
+  const p=phs.findIndex(x=>x.d<x.n);
+  if(p<0){
+    const ph={k:[...new Set(phs.flatMap(x=>x.k))],d:2,i:9};
+    const items=pickFrom(pool(st,ctx,ph),6,pc,used).map(c=>({ex:c.ex,kind:'bonus',badge:'בונוס',
+      reason:'השלמת את כל שלבי האימון. זה תרגיל נוסף, אם נשאר לך כוח.'}));
+    return {mode:'complete',sid,phases:phs,cur:null,items};
+  }
+  const cur=phs[p],n1=phs[p+1],n2=phs[p+2];
+  let kN=0;
+  if(n1){kN=Math.round(4.5*cur.d/cur.n);if(cur.i>0) kN=Math.max(kN,2);if(!st.done.length) kN=0}
+  const kN2=(n2&&kN>=3)?1:0;kN-=kN2;
+  const kC=6-kN-kN2;
+  const a=pickFrom(pool(st,ctx,cur),kC,pc,used);
+  const b=n1?pickFrom(pool(st,ctx,n1),kN+(kC-a.length),pc,used):[];
+  const c=n2?pickFrom(pool(st,ctx,n2),kN2+Math.max(0,kN+(kC-a.length)-b.length),pc,used):[];
+  const items=[
+    ...a.map(x=>({ex:x.ex,kind:'cur',badge:'',reason:whyCur(ctx,x.ex,cur)})),
+    ...b.map(x=>({ex:x.ex,kind:'next',badge:'הבא',reason:whyNext(cur,n1)})),
+    ...c.map(x=>({ex:x.ex,kind:'next',badge:'הבא',reason:whyNext(cur,n2)}))];
+  if(items.length<6){
+    const later=phs.slice(p+1);
+    const ph={k:[...new Set(later.flatMap(x=>x.k))],d:1,i:1};
+    pickFrom(pool(st,ctx,ph),6-items.length,pc,used).forEach(x=>items.push({ex:x.ex,kind:'next',badge:'הבא',reason:'תרגיל משלב מאוחר יותר באימון.'}));
+  }
+  return {mode:'run',sid,phases:phs,cur,items};
+}
+function rxOf(e,L){
+  const base=e.c?[
+    {sets:'3',reps:'8–12',rest:'90 שנ׳',rir:'2–3',tempo:'2-0-1-0'},
+    {sets:'3–4',reps:'6–10',rest:'2–3 דק׳',rir:'1–2',tempo:'3-0-1-0'},
+    {sets:'3–5',reps:'4–8 / 8–12',rest:'2–4 דק׳',rir:'0–2',tempo:'3-1-1-0'}]:[
+    {sets:'2–3',reps:'12–15',rest:'60 שנ׳',rir:'2–3',tempo:'2-0-1-1'},
+    {sets:'3',reps:'10–15',rest:'60–90 שנ׳',rir:'1',tempo:'2-0-1-1'},
+    {sets:'2–4',reps:'10–20',rest:'60–90 שנ׳',rir:'0–1',tempo:'3-1-1-1'}];
+  const r=Object.assign({},base[L]);
+  if(e.rx) for(const k in e.rx) r[k]=e.rx[k][L];
+  return r;
+}
+function altsOf(e){
+  const same=EXS.filter(x=>x.id!==e.id&&x.p===e.p);
+  const tgt=EXS.filter(x=>x.id!==e.id&&x.t===e.t&&x.p!==e.p).sort((a,b)=>b.pop-a.pop);
+  return [...same,...tgt].slice(0,5);
+}
+</script>
+
+<script>
+/* ---------- pictograms: stick figures drawn from joint coordinates (100x100, side views face right) ---------- */
+const POSES={
+bench:{g:['rod 34 64 34 86','rod 78 64 78 86','pad 28 64 84 64','plate 69 30 9'],fl:[[42,57,31,61,31,85]],t:[69,57,42,57],l:[[42,57,26,57,22,85]],h:[80,55],a:[[69,57,69,44,69,31]]},
+bench_db:{g:['rod 34 64 34 86','rod 78 64 78 86','pad 28 64 84 64'],fl:[[42,57,31,61,31,85]],t:[69,57,42,57],l:[[42,57,26,57,22,85]],h:[80,55],a:[[69,57,69,44,69,32]],fg:['db 69 30']},
+incline:{g:['rod 46 72 46 88','pad 28 72 46 72','pad 46 71 63 54','plate 62 20 9'],fl:[[42,66,33,68,33,88]],t:[62,46,42,66],l:[[42,66,27,64,23,88]],h:[68,38],a:[[62,46,62,34,62,21]]},
+incline_db:{g:['rod 46 72 46 88','pad 28 72 46 72','pad 46 71 63 54'],fl:[[42,66,33,68,33,88]],t:[62,46,42,66],l:[[42,66,27,64,23,88]],h:[68,38],a:[[62,46,62,34,62,22]],fg:['db 62 20']},
+machine_press:{g:['rod 40 66 40 88','pad 30 66 52 66','pad 30 28 30 66','rod 66 26 66 46','rod 66 30 84 14'],fl:[[38,61,55,64,52,86]],t:[37,35,38,61],l:[[38,61,57,62,57,86]],h:[40,24],a:[[37,35,51,38,65,36]]},
+fly:{g:['rect 41 12 18 60'],t:[50,28,50,54],l:[[50,54,43,68,40,86],[50,54,57,68,60,86]],h:[50,17],a:[[50,28,36,32,23,27],[50,28,64,32,77,27]],fg:['dbv 22 27','dbv 78 27'],m:['M16 18 Q 24 4 40 5','M84 18 Q 76 4 60 5']},
+pecdeck:{g:['rect 40 18 20 44','pad 32 62 68 62','rod 50 62 50 88'],t:[50,29,50,55],l:[[50,55,43,64,43,86],[50,55,57,64,57,86]],h:[50,18],a:[[50,29,36,31,35,15],[50,29,64,31,65,15]],m:['M27 9 Q 31 2 41 3','M73 9 Q 69 2 59 3']},
+crossover:{g:['cable 10 8 46 56','cable 90 8 54 56','floor 90'],t:[50,27,50,53],l:[[50,53,44,70,41,88],[50,53,56,70,59,88]],h:[50,15],a:[[50,27,38,40,46,56],[50,27,62,40,54,56]]},
+crossover_low:{g:['cable 10 86 45 32','cable 90 86 55 32','floor 90'],t:[50,27,50,53],l:[[50,53,44,70,41,88],[50,53,56,70,59,88]],h:[50,15],a:[[50,27,37,39,45,32],[50,27,63,39,55,32]]},
+dips:{g:['rod 26 48 26 90','rod 74 48 74 90','beam 20 48 80 48'],fl:[[45,57,43,73,31,79]],t:[56,32,45,57],l:[[45,57,47,74,35,82]],h:[61,23],a:[[56,32,43,37,51,48]]},
+dips_tri:{g:['rod 26 48 26 90','rod 74 48 74 90','beam 20 48 80 48'],fl:[[50,55,48,72,38,80]],t:[51,29,50,55],l:[[50,55,52,72,42,82]],h:[53,18],a:[[51,29,40,36,49,48]]},
+pushup:{g:['floor 90'],t:[70,64,42,72],l:[[42,72,26,78,10,85]],h:[79,60],a:[[70,64,70,75,70,86]]},
+ohp:{g:['bar 12 11 88','floor 92'],t:[50,35,50,60],l:[[50,60,45,75,43,90],[50,60,55,75,57,90]],h:[50,24],a:[[50,35,37,28,34,12],[50,35,63,28,66,12]]},
+ohp_seated:{g:['rect 41 26 18 38','pad 32 64 68 64','rod 50 64 50 90'],t:[50,34,50,60],l:[[50,60,43,68,43,88],[50,60,57,68,57,88]],h:[50,23],a:[[50,34,37,31,35,16],[50,34,63,31,65,16]],fg:['db 35 14','db 65 14']},
+landmine:{g:['beam 8 88 72 19','plate 73 18 6','floor 90'],fl:[[45,55,40,72,34,89]],t:[47,29,45,55],l:[[45,55,54,72,56,89]],h:[51,18],a:[[47,29,55,36,64,27]]},
+lateral:{g:['floor 90'],t:[50,27,50,53],l:[[50,53,45,70,43,88],[50,53,55,70,57,88]],h:[50,15],a:[[50,27,37,29,24,32],[50,27,63,29,76,32]],fg:['dbv 22 32','dbv 78 32'],m:['M30 60 Q 16 54 15 40','M70 60 Q 84 54 85 40']},
+frontraise:{g:['floor 90'],fa:[[48,28,47,41,48,53]],fl:[[47,53,44,70,43,88]],t:[48,28,47,53],l:[[47,53,49,70,49,88]],h:[51,16],a:[[48,28,61,29,74,30]],fg:['dbv 76 30'],m:['M54 60 Q 76 56 80 40']},
+upright:{g:['floor 90','handle 32 36 68 36'],t:[50,27,50,53],l:[[50,53,45,70,43,88],[50,53,55,70,57,88]],h:[50,15],a:[[50,27,34,24,42,36],[50,27,66,24,58,36]]},
+facepull:{g:['cable 92 23 56 23','floor 90'],fl:[[43,54,40,71,36,88]],t:[45,29,43,54],l:[[43,54,46,71,46,88]],h:[47,15],af:1,a:[[45,29,35,27,55,24]],fg:['handle 56 19 56 29']},
+reversefly:{g:['rod 44 64 44 88','pad 30 64 56 64','pad 64 26 64 52'],fl:[[50,59,64,62,62,86]],t:[56,30,50,59],l:[[50,59,66,63,64,86]],h:[60,19],a:[[56,30,43,31,30,32]],fg:['handle 30 26 30 38'],m:['M78 40 Q 56 52 34 42']},
+pushdown:{g:['cable 60 5 57 55','floor 90'],fl:[[45,55,43,72,41,89]],t:[47,29,45,55],l:[[45,55,48,72,48,89]],h:[50,18],a:[[47,29,46,43,57,54]],fg:['handle 52 55 63 55'],m:['M66 34 Q 73 46 67 58']},
+ohext:{g:['pad 30 64 58 64','rod 44 64 44 88','db 33 25'],fl:[[43,60,60,66,58,88]],t:[44,34,43,60],l:[[43,60,62,63,62,88]],h:[53,26],af:1,a:[[44,34,45,17,34,25]],m:['M28 32 Q 26 12 42 6']},
+ohext_cable:{g:['cable 6 74 76 14','floor 90'],fl:[[42,54,36,71,30,89]],t:[55,32,42,54],l:[[42,54,52,71,56,89]],h:[64,26],af:1,a:[[55,32,62,19,76,14]],fg:['handle 76 9 76 19']},
+skull:{g:['rod 34 64 34 86','rod 78 64 78 86','pad 28 64 84 64','plate 87 42 6'],fl:[[42,57,31,61,31,85]],t:[69,57,42,57],l:[[42,57,26,57,22,85]],h:[80,55],a:[[69,57,73,42,86,43]],m:['M92 34 Q 90 22 76 23']},
+kickback:{g:['rod 62 66 62 86','rod 86 66 86 86','pad 56 66 90 66'],fl:[[34,48,36,68,30,88]],fa:[[60,44,63,55,65,64]],t:[60,44,34,48],l:[[34,48,40,68,36,88]],h:[70,41],a:[[60,44,47,50,47,62]],fg:['db 47 64'],m:['M41 67 Q 28 65 29 51']},
+pullup:{g:['beam 14 10 86 10'],fl:[[50,60,53,75,47,89]],t:[50,35,50,60],l:[[50,60,47,75,53,89]],h:[50,24],a:[[50,35,33,28,30,11],[50,35,67,28,70,11]]},
+pulldown:{g:['cable 50 5 50 16','beam 18 16 82 16','rod 50 64 50 90'],t:[50,37,50,62],l:[[50,62,43,68,43,88],[50,62,57,68,57,88]],h:[50,26],a:[[50,37,34,34,27,17],[50,37,66,34,73,17]],fg:['pad 34 65 66 65']},
+row_bent:{g:['plate 48 54 9','floor 90'],fl:[[34,46,37,66,30,88]],t:[58,35,34,46],l:[[34,46,41,66,35,88]],h:[67,31],a:[[58,35,45,37,48,52]]},
+row_db:{g:['rod 28 68 28 88','rod 72 68 72 88','pad 22 68 78 68'],fl:[[32,53,36,63,20,63]],fa:[[58,52,61,59,63,64]],t:[58,52,32,53],l:[[32,53,28,70,26,89]],h:[67,49],a:[[58,52,46,42,48,58]],fg:['db 48 60']},
+row_seated:{g:['cable 92 48 44 49','pad 20 66 50 66','rod 34 66 34 88','pad 80 52 80 74'],fl:[[36,61,53,58,72,66]],t:[37,35,36,61],l:[[36,61,55,56,75,64]],h:[40,24],a:[[37,35,28,45,43,49]],fg:['handle 44 43 44 55']},
+straightarm:{g:['cable 80 5 58 56','floor 90'],fl:[[43,54,40,71,37,89]],t:[49,29,43,54],l:[[43,54,46,71,46,89]],h:[53,18],a:[[49,29,54,43,58,56]],fg:['handle 54 57 63 55'],m:['M64 16 Q 77 32 70 50']},
+deadlift:{g:['plate 55 72 11','floor 90'],fl:[[30,50,44,62,38,89]],t:[53,42,30,50],l:[[30,50,47,63,42,89]],h:[61,37],a:[[53,42,54,57,55,72]]},
+rdl:{g:['plate 56 72 9','floor 90'],fl:[[34,42,36,65,33,89]],t:[58,47,34,42],l:[[34,42,39,65,36,89]],h:[67,47],a:[[58,47,57,60,56,72]]},
+backext:{g:['rod 51 66 56 90','rod 24 90 70 90','pad 45 71 57 59','pad 18 82 26 90'],t:[66,40,46,60],l:[[46,60,34,72,22,84]],h:[72,33],a:[[66,40,72,48,62,52]]},
+curl:{g:['floor 90','plate 58 31 7'],fl:[[47,53,44,70,43,88]],t:[48,28,47,53],l:[[47,53,49,70,49,88]],h:[51,16],a:[[48,28,48,42,58,32]],m:['M53 58 Q 68 54 67 40']},
+curl_db:{g:['floor 90'],fl:[[47,53,44,70,43,88]],t:[48,28,47,53],l:[[47,53,49,70,49,88]],h:[51,16],a:[[48,28,48,42,58,32]],fg:['db 58 31'],m:['M53 58 Q 68 54 67 40']},
+hammer:{g:['floor 90'],fl:[[47,53,44,70,43,88]],t:[48,28,47,53],l:[[47,53,49,70,49,88]],h:[51,16],a:[[48,28,48,42,58,32]],fg:['dbv 59 31'],m:['M53 58 Q 68 54 67 40']},
+incline_curl:{g:['pad 28 69 46 69','rod 38 69 38 88','pad 49 66 61 40'],fl:[[44,64,30,60,26,86]],t:[56,38,44,64],l:[[44,64,28,62,24,86]],h:[60,27],a:[[56,38,57,52,58,66]],fg:['db 58 68'],m:['M52 76 Q 40 74 40 60']},
+preacher:{g:['pad 30 68 50 68','rod 40 68 40 88','pad 46 46 57 57','rod 56 58 56 88'],fl:[[38,63,56,66,55,88]],t:[44,37,38,63],l:[[38,63,57,64,57,88]],h:[49,27],a:[[44,37,55,49,60,35]],fg:['db 60 33']},
+bayesian:{g:['cable 6 86 53 33','floor 90'],fl:[[47,54,40,71,34,89]],t:[49,28,47,54],l:[[47,54,54,71,56,89]],h:[53,17],a:[[49,28,41,40,53,33]],fg:['handle 53 28 53 38']},
+squat:{g:['plate 44 33 9','floor 90'],fl:[[34,60,51,64,45,89]],t:[47,36,34,60],l:[[34,60,55,62,49,89]],h:[55,29],a:[[47,36,37,43,43,33]]},
+legpress:{g:['rod 52 66 86 32','pad 16 52 30 72','pad 30 74 46 74','rod 38 74 38 90','pad 58 36 70 48'],fl:[[36,68,43,50,61,45]],t:[22,48,36,68],l:[[36,68,46,49,64,42]],h:[17,40],a:[[22,48,28,60,38,64]]},
+goblet:{g:['floor 90'],fl:[[40,60,57,65,51,89]],t:[44,34,40,60],l:[[40,60,61,63,55,89]],h:[48,23],a:[[44,34,52,46,55,37]],fg:['dbv 57 39']},
+bss:{g:['pad 6 64 30 64','rod 10 64 10 90','rod 26 64 26 90','floor 90'],fl:[[44,56,35,75,22,62]],t:[47,30,44,56],l:[[44,56,61,64,59,89]],h:[50,19],a:[[47,30,45,44,45,58]],fg:['dbv 45 60']},
+lunge:{g:['floor 90'],fl:[[46,58,34,80,18,88]],t:[48,32,46,58],l:[[46,58,63,66,61,89]],h:[50,21],a:[[48,32,47,45,47,58]],fg:['dbv 47 60']},
+legext:{g:['pad 26 64 52 64','pad 26 30 26 64','rod 40 64 40 88','plate 75 57 4.5'],fl:[[34,59,53,62,70,58]],t:[33,33,34,59],l:[[34,59,54,60,72,53]],h:[36,22],a:[[33,33,36,46,44,61]],m:['M57 82 Q 76 80 79 64']},
+legcurl:{g:['pad 16 64 80 64','rod 22 64 22 88','rod 74 64 74 88','plate 30 42 4.5'],t:[70,57,44,58],l:[[44,58,27,58,24,41]],h:[80,55],a:[[70,57,74,65,84,66]],m:['M12 56 Q 8 40 18 32']},
+nordic:{g:['pad 24 88 42 88','plate 12 80 4.5','floor 92'],t:[62,48,46,68],l:[[46,68,32,86,14,86]],h:[67,41],a:[[62,48,68,58,76,63]],m:['M78 32 Q 94 50 88 76']},
+hipthrust:{g:['pad 4 68 28 68','rod 8 68 8 90','rod 24 68 24 90','floor 90','plate 52 49 8'],fl:[[52,57,67,62,66,88]],t:[26,62,52,57],l:[[52,57,70,60,70,88]],h:[18,58],a:[[26,62,38,57,50,52]]},
+abduction:{g:['rect 40 20 20 40','pad 30 60 70 60','rod 50 60 50 90','pad 27 58 27 74','pad 73 58 73 74'],t:[50,29,50,55],l:[[50,55,33,64,31,86],[50,55,67,64,69,86]],h:[50,18],a:[[50,29,39,41,36,53],[50,29,61,41,64,53]],m:['M18 44 Q 10 56 14 70','M82 44 Q 90 56 86 70']},
+glute_kb:{g:['rod 80 28 80 90','floor 90'],t:[58,32,42,52],l:[[42,52,46,70,46,89],[42,52,25,55,11,46]],h:[65,25],a:[[58,32,68,41,80,41]],m:['M30 74 Q 14 70 10 56']},
+calf:{g:['rect 44 86 24 6'],fl:[[47,52,45,68,44,81,52,87]],t:[48,27,47,52],l:[[47,52,49,68,49,81,57,87]],h:[51,15],a:[[48,27,47,40,48,52]],fg:['dbv 48 54'],m:['M70 74 L 70 58']},
+plank:{g:['floor 90'],t:[66,70,40,74],l:[[40,74,25,79,10,85]],h:[75,66],a:[[66,70,66,85,80,85]]},
+hanging:{g:['beam 36 6 70 6'],fl:[[50,58,67,61,84,63]],t:[52,32,50,58],l:[[50,58,68,58,86,59]],h:[58,25],a:[[52,32,52,19,52,8]],m:['M58 86 Q 84 84 88 68']},
+cable_crunch:{g:['cable 74 5 70 56','floor 90'],t:[60,58,42,64],l:[[42,64,40,86,22,87]],h:[66,67],a:[[60,58,64,49,70,56]]},
+abwheel:{g:['plate 84 83 6','floor 90'],t:[62,64,40,72],l:[[40,72,30,86,14,86]],h:[71,61],a:[[62,64,73,73,83,82]]},
+pallof:{g:['cable 94 44 52 44','floor 90'],t:[50,27,50,53],l:[[50,53,42,70,38,88],[50,53,58,70,62,88]],h:[50,15],a:[[50,27,41,36,48,44],[50,27,59,36,52,44]],fg:['handle 46 44 54 44'],m:['M30 28 Q 20 42 28 58']},
+crunch:{g:['floor 90'],t:[66,74,46,84],l:[[46,84,32,66,22,86]],h:[74,68],af:1,a:[[66,74,72,62,79,63]]}
+};
+function P(a){let s='';for(let i=0;i<a.length;i+=2)s+=(i?' ':'')+a[i]+','+a[i+1];return s}
+function limb(a,cls,w,halo){
+  let s='';
+  if(halo&&a.length>=4){const x=a[0]+(a[2]-a[0])*.5,y=a[1]+(a[3]-a[1])*.5;s+=`<polyline class="halo" stroke-width="${w+4}" points="${P([x,y,...a.slice(2)])}"/>`}
+  return s+`<polyline class="${cls}" stroke-width="${w}" points="${P(a)}"/>`;
+}
+function ln(c,v,w){return `<line class="${c}" x1="${v[0]}" y1="${v[1]}" x2="${v[2]}" y2="${v[3]}"${w?` stroke-width="${w}"`:''}/>`}
+function gear(str){
+  const [k,...r]=str.split(' '),v=r.map(Number);
+  switch(k){
+    case 'pad':return ln('gp',v,6);
+    case 'rod':return ln('gr',v,3);
+    case 'beam':return ln('gr',v,5);
+    case 'handle':return ln('gr',v,4);
+    case 'plate':return `<circle class="gl" cx="${v[0]}" cy="${v[1]}" r="${v[2]}"/><circle class="gh" cx="${v[0]}" cy="${v[1]}" r="${Math.max(1.6,v[2]/4)}"/>`;
+    case 'db':{const [x,y]=v;return ln('gr',[x-6,y,x+6,y],3)+`<rect class="gd" x="${x-9}" y="${y-5}" width="4.5" height="10" rx="1.5"/><rect class="gd" x="${x+4.5}" y="${y-5}" width="4.5" height="10" rx="1.5"/>`}
+    case 'dbv':{const [x,y]=v;return ln('gr',[x,y-6,x,y+6],3)+`<rect class="gd" x="${x-5}" y="${y-9}" width="10" height="4.5" rx="1.5"/><rect class="gd" x="${x-5}" y="${y+4.5}" width="10" height="4.5" rx="1.5"/>`}
+    case 'bar':{const [x1,y,x2]=v;return ln('gr',[x1,y,x2,y],3.5)+`<rect class="gl" x="${x1}" y="${y-9}" width="5" height="18" rx="1.5"/><rect class="gl" x="${x2-5}" y="${y-9}" width="5" height="18" rx="1.5"/>`}
+    case 'cable':return ln('gc',v)+`<circle class="pul" cx="${v[0]}" cy="${v[1]}" r="3.2"/>`;
+    case 'floor':return ln('fl',[6,v[0],94,v[0]]);
+    case 'rect':return `<rect class="rc" x="${v[0]}" y="${v[1]}" width="${v[2]}" height="${v[3]}" rx="4"/>`;
+  }
+  return '';
+}
+const PIC_CACHE={};
+function pic(id){return PIC_CACHE[id]||(PIC_CACHE[id]=drawPose(POSES[id]||POSES.bench))}
+function drawPose(p){
+  let s='<svg class="pg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">';
+  (p.g||[]).forEach(x=>s+=gear(x));
+  (p.fl||[]).forEach(a=>s+=limb(a,'f',7));
+  (p.fa||[]).forEach(a=>s+=limb(a,'f',6.5));
+  s+=limb(p.t,'b',10);
+  (p.l||[]).forEach(a=>s+=limb(a,'b',7.5));
+  const head=`<circle class="hd" cx="${p.h[0]}" cy="${p.h[1]}" r="7"/>`;
+  if(p.af) s+=head;
+  (p.a||[]).forEach(a=>s+=limb(a,'b',7,1));
+  if(!p.af) s+=head;
+  (p.fg||[]).forEach(x=>s+=gear(x));
+  (p.m||[]).forEach(d=>s+=`<path class="mo" d="${d}"/>`);
+  return s+'</svg>';
+}
+
+/* ---------- exercise motion: the other end of each movement. Only the parts that move are listed;
+   each entry has the same shape as the pose it changes, and the figure eases between the two. ---------- */
+const MOVES={
+bench:{a:[[69,57,62,63,66,49]],g:['rod 34 64 34 86','rod 78 64 78 86','pad 28 64 84 64','plate 66 47 9']},
+bench_db:{a:[[69,57,62,63,66,49]],fg:['db 66 47']},
+incline:{a:[[62,46,56,53,58,40]],g:['rod 46 72 46 88','pad 28 72 46 72','pad 46 71 63 54','plate 58 38 9']},
+incline_db:{a:[[62,46,56,53,58,40]],fg:['db 58 38']},
+machine_press:{a:[[37,35,29,41,43,37]],g:['rod 40 66 40 88','pad 30 66 52 66','pad 30 28 30 66','rod 44 27 44 47','rod 44 31 72 13']},
+fly:{a:[[50,28,40,31,46,33],[50,28,60,31,54,33]],fg:['dbv 45 33','dbv 55 33']},
+pecdeck:{a:[[50,29,43,33,45,17],[50,29,57,33,55,17]]},
+crossover:{g:['cable 10 8 22 33','cable 90 8 78 33','floor 90'],a:[[50,27,36,33,22,33],[50,27,64,33,78,33]]},
+crossover_low:{g:['cable 10 86 26 58','cable 90 86 74 58','floor 90'],a:[[50,27,38,44,26,58],[50,27,62,44,74,58]]},
+dips:{fl:[[44,49,42,65,30,71]],t:[53,24,44,49],l:[[44,49,46,66,34,74]],h:[58,15],a:[[53,24,52,36,51,48]]},
+dips_tri:{fl:[[49,48,47,65,37,73]],t:[50,22,49,48],l:[[49,48,51,65,41,75]],h:[52,11],a:[[50,22,50,35,49,48]]},
+pushup:{t:[70,78,42,80],l:[[42,80,26,82,10,85]],h:[79,75],a:[[70,78,62,73,70,86]]},
+ohp:{g:['bar 12 33 88','floor 92'],a:[[50,35,37,45,34,33],[50,35,63,45,66,33]]},
+ohp_seated:{a:[[50,34,37,44,35,32],[50,34,63,44,65,32]],fg:['db 35 30','db 65 30']},
+landmine:{g:['beam 8 88 62 22','plate 63 21 6','floor 90'],a:[[47,29,52,40,56,30]]},
+lateral:{a:[[50,27,41,40,39,53],[50,27,59,40,61,53]],fg:['dbv 39 55','dbv 61 55']},
+frontraise:{a:[[48,28,50,41,52,53]],fg:['dbv 52 55']},
+upright:{g:['floor 90','handle 32 54 68 54'],a:[[50,27,41,40,40,54],[50,27,59,40,60,54]]},
+facepull:{g:['cable 92 23 69 25','floor 90'],a:[[45,29,57,27,69,25]],fg:['handle 69 20 69 30']},
+reversefly:{a:[[56,30,69,31,82,32]],fg:['handle 82 26 82 38']},
+pushdown:{g:['cable 60 5 58 37','floor 90'],a:[[47,29,46,43,57,36]],fg:['handle 52 37 63 37']},
+ohext:{g:['pad 30 64 58 64','rod 44 64 44 88','db 46 3'],a:[[44,34,45,17,46,5]]},
+ohext_cable:{g:['cable 6 74 52 23','floor 90'],a:[[55,32,62,19,52,23]],fg:['handle 52 18 52 28']},
+skull:{g:['rod 34 64 34 86','rod 78 64 78 86','pad 28 64 84 64','plate 74 28 6'],a:[[69,57,73,42,74,29]]},
+kickback:{a:[[60,44,47,50,35,47]],fg:['db 33 47']},
+pullup:{fl:[[50,50,53,65,47,79]],t:[50,25,50,50],l:[[50,50,47,65,53,79]],h:[50,14],a:[[50,25,32,30,30,11],[50,25,68,30,70,11]]},
+pulldown:{g:['cable 50 5 50 38','beam 18 38 82 38','rod 50 64 50 90'],a:[[50,37,36,50,27,38],[50,37,64,50,73,38]]},
+row_bent:{g:['plate 56 63 9','floor 90'],a:[[58,35,57,48,56,61]]},
+row_db:{a:[[58,52,58,64,58,76]],fg:['db 58 78']},
+row_seated:{g:['cable 92 48 64 46','pad 20 66 50 66','rod 34 66 34 88','pad 80 52 80 74'],a:[[37,35,50,40,63,46]],fg:['handle 64 40 64 52']},
+straightarm:{g:['cable 80 5 70 16','floor 90'],a:[[49,29,60,23,70,16]],fg:['handle 66 18 75 14']},
+deadlift:{g:['plate 48 57 11','floor 90'],fl:[[43,53,40,71,38,89]],t:[45,27,43,53],l:[[43,53,44,71,42,89]],h:[48,16],a:[[45,27,46,41,47,55]]},
+rdl:{g:['plate 43 57 9','floor 90'],fl:[[38,53,35,71,33,89]],t:[40,27,38,53],l:[[38,53,38,71,36,89]],h:[43,16],a:[[40,27,41,41,42,55]]},
+backext:{t:[70.5,74,46,60],h:[79,78],a:[[70.5,74,64,82,58,73]]},
+curl:{g:['floor 90','plate 50 56 7'],a:[[48,28,48,42,49,55]]},
+curl_db:{a:[[48,28,48,42,49,55]],fg:['db 50 56']},
+hammer:{a:[[48,28,48,42,49,55]],fg:['dbv 50 56']},
+incline_curl:{a:[[56,38,57,52,47,45]],fg:['db 46 43']},
+preacher:{a:[[44,37,55,49,65,60]],fg:['db 66 62']},
+bayesian:{g:['cable 6 86 37 53','floor 90'],a:[[49,28,41,40,37,53]],fg:['handle 37 48 37 58']},
+squat:{g:['plate 45 26 9','floor 90'],fl:[[45,53,46,71,45,89]],t:[47,27,45,53],l:[[45,53,49,71,49,89]],h:[50,16],a:[[47,27,38,34,44,26]]},
+legpress:{g:['rod 52 66 86 32','pad 16 52 30 72','pad 30 74 46 74','rod 38 74 38 90','pad 48 47 60 59'],fl:[[36,68,39,47,51,55]],l:[[36,68,42,46,54,53]]},
+goblet:{fl:[[46,53,49,71,51,89]],t:[47,27,46,53],l:[[46,53,52,71,55,89]],h:[50,16],a:[[47,27,54,38,56,31]],fg:['dbv 58 33']},
+bss:{fl:[[46,48,34,64,22,62]],t:[49,22,46,48],l:[[46,48,56,68,59,89]],h:[52,11],a:[[49,22,47,36,47,50]],fg:['dbv 47 52']},
+lunge:{fl:[[46,50,32,68,18,88]],t:[48,24,46,50],l:[[46,50,57,69,61,89]],h:[50,13],a:[[48,24,47,37,47,50]],fg:['dbv 47 52']},
+legext:{g:['pad 26 64 52 64','pad 26 30 26 64','rod 40 64 40 88','plate 58 83 4.5'],fl:[[34,59,53,62,52,82]],l:[[34,59,54,60,55,80]]},
+legcurl:{g:['pad 16 64 80 64','rod 22 64 22 88','rod 74 64 74 88','plate 11 53 4.5'],l:[[44,58,27,58,10,59]]},
+nordic:{t:[37,40,34,64],l:[[34,64,32,86,14,86]],h:[39,29],a:[[37,40,43,50,48,58]]},
+hipthrust:{g:['pad 4 68 28 68','rod 8 68 8 90','rod 24 68 24 90','floor 90','plate 48 66 8'],fl:[[48,74,66,63,66,88]],t:[26,62,48,74],l:[[48,74,68,62,70,88]],a:[[26,62,37,65,46,68]]},
+abduction:{g:['rect 40 20 20 40','pad 30 60 70 60','rod 50 60 50 90','pad 37 58 37 74','pad 63 58 63 74'],l:[[50,55,43,64,43,86],[50,55,57,64,57,86]]},
+glute_kb:{l:[[42,52,46,70,46,89],[42,52,49,68,45,84]]},
+calf:{fl:[[47,56,45,72,44,86,52,87]],t:[48,31,47,56],l:[[47,56,49,72,49,86,57,87]],h:[51,19],a:[[48,31,47,44,48,56]],fg:['dbv 48 58']},
+plank:{t:[69,70,43,74],l:[[43,74,27,79,10,85]],h:[78,66],a:[[69,70,66,85,80,85]]},
+hanging:{fl:[[50,58,48,74,47,90]],l:[[50,58,52,74,52,90]]},
+cable_crunch:{g:['cable 74 5 56 30','floor 90'],t:[47,40,42,64],h:[52,30],a:[[47,40,55,40,56,30]]},
+abwheel:{g:['plate 60 83 6','floor 90'],t:[54,55,40,68],l:[[40,68,30,86,14,86]],h:[62,51],a:[[54,55,57,68,59,82]]},
+pallof:{g:['cable 94 40 52 40','floor 90'],a:[[50,27,38,38,47,40],[50,27,62,38,53,40]],fg:['handle 46 40 54 40']},
+crunch:{t:[67,84,46,84],h:[76,82],a:[[67,84,73,74,80,78]]}
+};
+function lerpAny(a,b,s){
+  if(typeof a==='number') return a+(b-a)*s;
+  if(typeof a==='string'){const A=a.split(' '),B=b.split(' ');return A.map((x,i)=>i?String(Math.round((+x+(+B[i]-+x)*s)*10)/10):x).join(' ')}
+  if(Array.isArray(a)) return a.map((x,i)=>lerpAny(x,b[i],s));
+  return a;
+}
+function poseAt(id,s){
+  const A=POSES[id]||POSES.bench,B=MOVES[id];
+  if(!B||s<=0) return A;
+  const o=Object.assign({},A);
+  for(const k in B) o[k]=lerpAny(A[k],B[k],s);
+  return o;
+}
+
+/* ---------- muscle map: front and back body, left half drawn then mirrored ---------- */
+const HEAD=[null,'M49 20a11 13 0 1 0 22 0a11 13 0 1 0-22 0Z',1],NECK=[null,'M54 31h12l1.5 10h-15Z',1];
+const CAP_OUT='M40 42C32 42 26.5 47 26.5 55C26.5 60 28 64 30 66.5L33 65.5C31 57 33.5 48.5 40 42Z';
+const CAP_IN='M41 42.5C34.5 49 32.5 57 34 65L37 63.5C37 56 40.5 50 46 46L45 43Z';
+const UPPER_ARM='M31 68C27 73 25 80.5 25.5 88.5L31.5 89.5C34.5 82.5 36 74.5 35.5 66.5Z';
+const FOREARM='M25.5 91C21.5 98 19.5 108 19.5 118L24.5 119C27.5 110 30.5 100.5 31.5 92Z';
+const HAND=[null,'M18.5 121C17 126 19 130 22 130C25 130 25.5 125 24.5 121Z'];
+const KNEE=[null,'M41 162.5C42.5 166 48.5 166 50.5 162.5C48.5 161 43 161 41 162.5Z'];
+const FOOT=[null,'M41.5 209.5L48 209.5L50.5 217L38.5 217Z'];
+const BODY={
+  front:[HEAD,NECK,
+    ['traps','M53.5 34C50 38 45 40.5 41 41.5L54 42Z'],
+    ['deltS',CAP_OUT],['deltF',CAP_IN],
+    ['chestU','M59.2 44L47 44C43.5 46 40.5 49.5 39.5 54L59.2 54Z'],
+    ['chestL','M59.2 55.2L39.3 55.2C38.8 61 41.5 66.5 47 68.5C52 69.8 56 69 59.2 67.5Z'],
+    ['abs','M52 71.5h7.2v8H52ZM52 81h7.2v8H52ZM52 90.5h7.2v8H52ZM52 100h7.2v9.5c-2.5 1.5-5 .5-7.2-2Z'],
+    ['obliques','M50.5 71L44.5 69.5C41.5 77 41.5 89 43.5 99C45 104 47.5 107.5 50.5 109.5Z'],
+    ['biceps',UPPER_ARM],['forearm',FOREARM],HAND,
+    ['quads','M41.5 110C37.5 121 36.5 138 39 153C40.5 159.5 46.5 161.5 50.5 158C53.5 146 55.5 129 55.5 119C51.5 115 46.5 112 41.5 110Z'],
+    ['adductors','M57.2 117L59.5 119L59.5 131C57.5 137 55.5 141 53.8 145C54.8 135 55.6 126 57.2 117Z'],
+    KNEE,
+    ['calves','M40.5 169C38.5 181 39 195 42 207L47.5 207C49.5 195 50 181 49.5 169Z'],
+    FOOT],
+  back:[HEAD,NECK,
+    ['traps','M59.5 30L54 31.5C51 36.5 46 40 41 42L47.5 47C52.5 54 56.5 64 59.5 76Z'],
+    ['deltS',CAP_OUT],['deltR',CAP_IN],
+    ['upperback','M46.5 49C41.5 53 39.5 59 40.5 65C44.5 67 49.5 67.5 53.5 66C52.5 59.5 50.5 54 46.5 49Z'],
+    ['lats','M40 67.5C39 77 42 89 48.5 98.5C50.5 100.5 52.5 100.5 54 98.5L54.5 80C52 74.5 47 69.5 40 67.5Z'],
+    ['lowerback','M55.8 79L59.3 79L59.3 110L54.2 110C53.6 100 54 89 55.8 79Z'],
+    ['triceps',UPPER_ARM],['forearm',FOREARM],HAND,
+    ['glutes','M42.5 110C40 117 40.5 126 45.5 131.5C50.5 135 56.5 133 59.5 129L59.5 112C54 108 47.5 107 42.5 110Z'],
+    ['hams','M42 135.5C39.5 145 40 154 42.5 161.5L50 161.5C53.5 152.5 55.5 143 57 136C52 137.5 46.5 137.5 42 135.5Z'],
+    KNEE,
+    ['calves','M40 169C36.5 177 37 189 40.5 197.5C43.5 202 47 202 49 198C51 190 51 178 48.5 169Z'],
+    [null,'M42 200L48 200L47.5 207.5L42.5 207.5Z'],
+    FOOT]
+};
+/* the muscle names used in the exercise data, mapped onto map regions */
+function regionsOf(txt){
+  const has=k=>txt.includes(k),r=[];
+  if(has('חזה')) r.push(...(has('עליון')?['chestU']:has('תחתון')?['chestL']:['chestU','chestL']));
+  if(has('כתף קדמית')) r.push('deltF');
+  if(has('כתף צידית')) r.push('deltS');
+  if(has('כתף אחורית')) r.push('deltR');
+  if(txt==='כתפיים') r.push('deltF','deltS','deltR');
+  if(has('יד אחורית')||has('יד האחורית')||has('ראש צידי')) r.push('triceps');
+  if(has('יד קדמית')||has('ברכיאליס')) r.push('biceps');
+  if(has('ברכיורדיאליס')||has('אמה')||has('שרירי הזרוע')||has('אחיזה')) r.push('forearm');
+  if(has('רחב גבי')||has('טרס')) r.push('lats');
+  if(has('גב עליון')||has('מעוינים')||has('סופרהספינטוס')||has('מסובבים')) r.push('upperback');
+  if(has('טרפז')) r.push('traps');
+  if(has('זוקפי גו')||has('ריבועי')) r.push('lowerback');
+  if(has('ארבע ראשי')||has('ישר הירך')||has('מכופפי ירך')) r.push('quads');
+  if(has('מקרבים')) r.push('adductors');
+  if(has('ירך אחורית')) r.push('hams');
+  if(has('ישבן')||has('מייצבי אגן')||has('TFL')) r.push('glutes');
+  if(has('תאומים')||has('סוליה')) r.push('calves');
+  if(has('ישר הבטן')||has('בטן רוחבית')) r.push('abs');
+  if(has('אלכסוניים')||has('סראטוס')) r.push('obliques');
+  if(has('ליבה')) r.push('abs','obliques');
+  return r;
+}
+function regionsFor(e){
+  const P=new Set(),S=new Set();
+  e.m.forEach(x=>regionsOf(x).forEach(r=>P.add(r)));
+  e.s.forEach(x=>regionsOf(x).forEach(r=>{if(!P.has(r)) S.add(r)}));
+  return {P,S};
+}
+function bodySvg(view,P,S){
+  const cls=r=>r?(P.has(r)?'mp':S.has(r)?'ms':'m0'):'mb';
+  let center='',half='';
+  BODY[view].forEach(([r,d,c])=>{const p=`<path class="${cls(r)}" d="${d}"/>`;if(c) center+=p;else half+=p});
+  return `<svg class="mapsvg" viewBox="15 4 90 216" aria-hidden="true" focusable="false">${center}${half}<g transform="translate(120 0) scale(-1 1)">${half}</g></svg>`;
+}
+
+/* ---------- UI ---------- */
+(function(){
+const $=s=>document.querySelector(s);
+const ICON={
+  check:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  zap:'<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5A8 8 0 0 0 6 6.3"/><path d="M4 12.5A8 8 0 0 0 18 17.7"/><path d="M6 2.8v3.7h3.7"/><path d="M18 21.2v-3.7h-3.7"/></g></svg>',
+  book:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  flag:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4h11l-2.2 4 2.2 4H6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  close:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  search:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+};
+$('#finish').innerHTML=ICON.flag+'<span>סיום</span>';
+$('#zap').innerHTML=ICON.zap+'<span>זפזפ</span>';
+$('#openCat').innerHTML=ICON.book+'<span>קטלוג</span>';
+$('#catClose').innerHTML=ICON.back+'<span>חזרה</span>';
+$('#sheetClose').innerHTML=ICON.close;
+$('#qIcon').outerHTML=ICON.search;
+
+/* state: level is remembered on this device; the running workout survives a reload for 5 hours */
+const KEY='kf.session.v1',LKEY='kf.level';
+function sget(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function sset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+const st={level:1,split:'auto',done:[],zap:0,prev:[],seed:Date.now()};
+(function load(){
+  const lv=sget(LKEY,1);if([0,1,2].includes(lv)) st.level=lv;
+  const s=sget(KEY,null);
+  if(s&&Array.isArray(s.done)&&s.last&&Date.now()-s.last<5*3600e3){
+    st.split=SPLITS[s.split]?s.split:'auto';
+    st.done=s.done.filter(d=>d&&EX[d.id]);
+    st.seed=s.seed||st.seed;
+  }
+})();
+function save(){sset(KEY,{split:st.split,done:st.done,seed:st.seed,last:Date.now()});sset(LKEY,st.level)}
+
+let view=null,cat='all';
+const dots=(n,on)=>Array.from({length:n},(_,i)=>`<i${i<on?' class="on"':''}></i>`).join('');
+const minutes=()=>st.done.length?Math.max(1,Math.round((Date.now()-st.done[0].t)/60000)):0;
+
+function refresh(anim){view=suggest(st);renderLevel();renderSplits();renderTrail();renderBoard(anim)}
+function renderLevel(){document.querySelectorAll('#level button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.lv===st.level)))}
+function renderSplits(){
+  const det=activeSplit(st);
+  const auto='אוטומטי'+(st.split==='auto'&&det?` · ${SPLITS[det].badge}`:'');
+  const items=[['auto',auto],['A','<b>A</b>'+SPLITS.A.name],['B','<b>B</b>'+SPLITS.B.name],['C','<b>C</b>'+SPLITS.C.name],['F',SPLITS.F.name]];
+  $('#splits').innerHTML=items.map(([k,l])=>`<button type="button" data-split="${k}" aria-pressed="${st.split===k}">${l}</button>`).join('');
+}
+function renderTrail(){
+  const v=view,ph=$('#phases');
+  if(v.sid){
+    ph.innerHTML=`<span class="sid">${SPLITS[v.sid].badge}</span>`+v.phases.map(p=>{
+      const now=v.cur&&p.i===v.cur.i;
+      return `<span class="phase${now?' now':''}">${p.he}<span class="dots" role="img" aria-label="${Math.min(p.d,p.n)} מתוך ${p.n}">${dots(p.n,p.d)}</span></span>`;
+    }).join('')+(v.mode==='complete'?'<span class="phase done">כל השלבים הושלמו</span>':'');
+  }else ph.innerHTML='<span class="hint">בחר תרגיל פותח, וההצעות ימשיכו לפי סוג האימון.</span>';
+  const path=$('#path');
+  if(!st.done.length){path.innerHTML='<span class="hint">כל תרגיל שתסמן ב-✓ יתווסף כאן. החזק אצבע על איור כדי לראות את התנועה.</span>';return}
+  path.innerHTML=st.done.map((d,i)=>{const e=EX[d.id];return `<button type="button" class="step" data-step="${i}" title="${e.he}">${pic(e.ic)}<span>${e.he}</span></button>`}).join('<i class="link" aria-hidden="true"></i>')+`<span class="time" id="elapsed">${minutes()} דק׳</span>`;
+  requestAnimationFrame(()=>{path.scrollLeft=getComputedStyle(path).direction==='rtl'?-path.scrollWidth:path.scrollWidth});
+}
+function renderBoard(anim){
+  const items=view.items;
+  let html=items.map((it,i)=>`<div class="cell${anim?' enter':''}" style="--i:${i}">
+    <button type="button" class="tile" data-i="${i}" aria-label="${T[it.ex.t].he}, ${it.ex.he}: הסבר ופרטים">
+      <span class="label">${T[it.ex.t].he}</span>${it.badge?`<span class="badge">${it.badge}</span>`:''}
+      <span class="pic" data-anim="${it.ex.ic}">${pic(it.ex.ic)}</span>
+      <span class="nm">${it.ex.he}</span>
+      <span class="en" dir="ltr">${it.ex.en}</span>
+    </button>
+    <button type="button" class="tick" data-tick="${i}" aria-label="סמן כבוצע: ${it.ex.he}">${ICON.check}</button>
+  </div>`).join('');
+  for(let i=items.length;i<6;i++) html+=`<div class="cell"><div class="empty-cell">${i===items.length?'אין עוד הצעות לשלב הזה. פתח את הקטלוג או סיים את האימון.':''}</div></div>`;
+  $('#board').innerHTML=html;
+}
+
+/* overlays: each open sheet or catalog adds a history entry, so the phone's back button closes it */
+const stack=[];let useHist=true;
+function pushOverlay(n){
+  stack.push({n,f:document.activeElement});
+  if(useHist){try{history.pushState({kf:stack.length},'')}catch(e){useHist=false}}
+}
+function hide(n){if(n==='sheet'){$('#scrim').hidden=true;$('.sheet').style.transform=''}else $('#catalog').hidden=true}
+function collapse(d){
+  let f=null;
+  while(stack.length>d){const o=stack.pop();hide(o.n);f=o.f}
+  if(f&&document.contains(f)&&!f.closest('[hidden]')) try{f.focus({preventScroll:true})}catch(e){}
+}
+function closeTo(d){
+  const n=stack.length-d;if(n<=0) return;
+  if(!useHist){collapse(d);return}
+  const before=stack.length;
+  try{history.go(-n)}catch(e){useHist=false;collapse(d);return}
+  setTimeout(()=>{if(stack.length===before){useHist=false;collapse(d)}},400);
+}
+window.addEventListener('popstate',ev=>{const d=ev.state&&ev.state.kf?ev.state.kf:0;if(d<stack.length) collapse(d)});
+const depthOf=n=>stack.findIndex(o=>o.n===n);
+const closeSheet=()=>{const i=depthOf('sheet');if(i>=0) closeTo(i)};
+const closeCatalog=()=>{const i=depthOf('catalog');if(i>=0) closeTo(i)};
+
+function openSheet(html,actions){
+  if($('#scrim').hidden) pushOverlay('sheet');
+  $('#sheetBody').innerHTML=html;$('#sheetActions').innerHTML=actions||'';
+  $('#scrim').hidden=false;$('#sheetBody').scrollTop=0;
+}
+function exHtml(e,reason){
+  const r=rxOf(e,st.level),alts=altsOf(e),{P,S}=regionsFor(e);
+  return `<div class="ex-head">
+    <div class="ex-pic-wrap"><div class="ex-pic" data-anim="${e.ic}">${pic(e.ic)}</div><span class="ex-hint"><span class="hint-touch">החזק את האצבע על האיור לראות את התנועה</span><span class="hint-mouse">העבר את העכבר על האיור לראות את התנועה</span></span></div>
+    <div class="ex-title"><h2 id="sheetTitle">${e.he}</h2><p class="en" dir="ltr">${e.en}</p>
+      <div class="chips"><span class="chip">${EQ[e.eq]}</span><span class="chip">${e.c?'מורכב':'מבודד'}</span><span class="chip">רמה: ${XL[e.lv]}</span></div>
+    </div></div>
+  <section class="map-card" aria-label="מפת השרירים של התרגיל">
+    <p class="map-title">${T[e.t].he}</p>
+    <div class="maps"><figure>${bodySvg('front',P,S)}<figcaption>מלפנים</figcaption></figure><figure>${bodySvg('back',P,S)}<figcaption>מאחור</figcaption></figure></div>
+    <div class="legend"><span><i class="lp"></i>עובד בעיקר</span>${S.size?'<span><i class="ls"></i>עוזר</span>':''}</div>
+  </section>
+  ${reason?`<p class="why"><b>למה עכשיו?</b>${reason}</p>`:''}
+  <section class="sec"><h3>שרירים</h3><div class="mus">${e.m.map(x=>`<span class="m1">${x}</span>`).join('')}${e.s.map(x=>`<span class="m2">${x}</span>`).join('')}</div></section>
+  <section class="sec"><h3>ביצוע</h3><ol>${e.how.map(x=>`<li>${x}</li>`).join('')}</ol></section>
+  <section class="sec"><h3>דגשים</h3><ul>${e.cue.map(x=>`<li>${x}</li>`).join('')}</ul></section>
+  <section class="sec"><h3>טעויות נפוצות</h3><ul class="err">${e.err.map(x=>`<li>${x}</li>`).join('')}</ul></section>
+  <section class="sec"><h3>מרשם לרמה: ${LV[st.level]}</h3>
+    <dl class="rx"><div><dt>סטים</dt><dd>${r.sets}</dd></div><div><dt>חזרות</dt><dd>${r.reps}</dd></div><div><dt>מנוחה</dt><dd>${r.rest}</dd></div><div><dt>RIR</dt><dd>${r.rir}</dd></div><div><dt>טמפו</dt><dd dir="ltr">${r.tempo}</dd></div></dl>
+    <p class="small">RIR: כמה חזרות נשארו לך בסוף הסט לפני כשל. טמפו: שניות לירידה, עצירה למטה, עלייה ועצירה למעלה.</p></section>
+  <details class="pro"${st.level>0?' open':''}><summary>עומק מקצועי</summary><p>${e.pro}</p></details>
+  ${alts.length?`<section class="sec"><h3>חלופות</h3><div class="alts">${alts.map(a=>`<button type="button" data-open="${a.id}">${a.he}</button>`).join('')}</div></section>`:''}`;
+}
+function openEx(id,reason){
+  const e=EX[id],idx=st.done.findIndex(d=>d.id===id);
+  const actions=idx>=0
+    ?`<span class="note-done">כבר במסלול של האימון הזה</span><button type="button" class="secondary" data-act="remove" data-id="${id}">הסר מהאימון</button>`
+    :`<button type="button" class="primary" data-act="done" data-id="${id}">${ICON.check}עשיתי, תציע הלאה</button>`;
+  openSheet(exHtml(e,reason),actions);
+}
+function openFinish(){
+  if(!st.done.length){toast('עוד לא סימנת תרגילים באימון הזה.');return}
+  const by={};st.done.forEach(d=>{const t=EX[d.id].t;by[t]=(by[t]||0)+1});
+  const sid=activeSplit(st);
+  openSheet(`<h2 class="plain" id="sheetTitle">סיכום אימון</h2>
+    <p class="sum">${st.done.length} תרגילים · ${minutes()} דק׳${sid?` · אימון ${SPLITS[sid].badge}`:''}</p>
+    <ul class="sumlist">${Object.entries(by).map(([t,c])=>`<li><span>${T[t].he}</span><b>${c}</b></li>`).join('')}</ul>
+    <section class="sec"><h3>המסלול</h3><ol>${st.done.map(d=>`<li>${EX[d.id].he}</li>`).join('')}</ol></section>`,
+    `<button type="button" class="primary" data-act="reset">התחל אימון חדש</button><button type="button" class="secondary" data-act="close">המשך להתאמן</button>`);
+}
+
+/* catalog */
+function openCatalog(){pushOverlay('catalog');$('#catalog').hidden=false;renderCatalog();$('#clist').scrollTop=0}
+function renderCatalog(){
+  $('#cats').innerHTML=[['all','הכל'],...CATS.map(c=>[c.id,c.he])].map(([k,l])=>`<button type="button" data-cat="${k}" aria-pressed="${cat===k}">${l}</button>`).join('');
+  const q=$('#q').value.trim().toLowerCase();
+  const match=e=>!q||[e.he,e.en,T[e.t].he,...e.m,...e.s].join(' ').toLowerCase().includes(q);
+  const cats=cat==='all'?CATS:CATS.filter(c=>c.id===cat);
+  let html='';
+  cats.forEach(c=>{
+    const list=EXS.filter(e=>T[e.t].cat===c.id&&match(e)).sort((a,b)=>a.lv-b.lv||b.pop-a.pop);
+    if(cat!=='all'&&!q) html+=`<article class="info"><p class="eyebrow">אנטומיה</p><p>${c.anat}</p><p class="eyebrow">תפקוד</p><p>${c.fn}</p><details${st.level>0?' open':''}><summary>למאמנים: איך בונים את הבלוק</summary><p>${c.pro}</p></details></article>`;
+    if(!list.length) return;
+    html+=`<h3 class="cgroup">${c.he}<span>${list.length}</span></h3>`+list.map(e=>`<button type="button" class="row" data-open="${e.id}"><span class="rpic" data-anim="${e.ic}">${pic(e.ic)}</span><span class="rtx"><b>${e.he}</b><small class="en2" dir="ltr">${e.en}</small><small>${EQ[e.eq]} · ${e.c?'מורכב':'מבודד'} · ${T[e.t].he}</small></span><span class="lv" role="img" aria-label="רמה: ${XL[e.lv]}">${dots(3,e.lv)}</span></button>`).join('');
+  });
+  if(!html.includes('class="row"')) html+='<p class="empty">לא נמצא תרגיל. נסה שם אחר בעברית או באנגלית, או שם של שריר.</p>';
+  $('#clist').innerHTML=html;
+}
+
+/* toast */
+let toastT=0;
+function toast(msg,undo){
+  const t=$('#toast');
+  t.innerHTML=`<span>${msg}</span>`+(undo?'<button type="button" id="undo">ביטול</button>':'');
+  t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true},4500);
+  if(undo) $('#undo').onclick=()=>{undo();t.hidden=true};
+}
+
+/* actions */
+function markDone(id){
+  if(st.done.some(d=>d.id===id)) return;
+  st.done.push({id,t:Date.now()});st.zap=0;st.prev=[];
+  try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}
+  save();refresh(true);
+  toast(`נרשם: ${EX[id].he}`,()=>{st.done=st.done.filter(d=>d.id!==id);st.zap=0;st.prev=[];save();refresh(true)});
+}
+function removeDone(id){st.done=st.done.filter(d=>d.id!==id);st.zap=0;st.prev=[];save();refresh(true)}
+function zap(){st.prev=view.items.map(x=>x.ex.id);st.zap++;refresh(true)}
+function reset(){st.done=[];st.split='auto';st.zap=0;st.prev=[];st.seed=Date.now();save();closeTo(0);refresh(true);toast('אימון חדש. בחר תרגיל פותח.')}
+
+/* exercise motion: while a mouse rests on a figure, or a finger presses it, the figure eases to the other end of the movement and back */
+const PERIOD=1700,reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const running=new Map();let raf=0;
+function animStart(el){
+  if(!el||reduceMotion||running.has(el)||!MOVES[el.dataset.anim]) return;
+  running.set(el,performance.now());
+  if(!raf) raf=requestAnimationFrame(animTick);
+}
+function animStop(el){
+  if(!el||!running.has(el)) return;
+  running.delete(el);el.innerHTML=pic(el.dataset.anim);
+}
+function animTick(now){
+  running.forEach((t0,el)=>{
+    if(!el.isConnected){running.delete(el);return}
+    const s=(1-Math.cos((now-t0)/PERIOD*2*Math.PI))/2;
+    el.innerHTML=drawPose(poseAt(el.dataset.anim,s));
+  });
+  raf=running.size?requestAnimationFrame(animTick):0;
+}
+const HOSTS='.cell,.ex-pic,.row';
+const animOf=t=>{const h=t&&t.closest?t.closest(HOSTS):null;return h?(h.matches('[data-anim]')?h:h.querySelector('[data-anim]')):null};
+document.addEventListener('pointerover',ev=>{if(ev.pointerType==='mouse') animStart(animOf(ev.target))});
+document.addEventListener('pointerout',ev=>{
+  if(ev.pointerType!=='mouse') return;
+  const h=ev.target.closest?ev.target.closest(HOSTS):null;
+  if(h&&!(ev.relatedTarget&&h.contains(ev.relatedTarget))) animStop(animOf(ev.target));
+});
+let press=null,suppressClick=false;
+document.addEventListener('pointerdown',ev=>{
+  if(ev.pointerType==='mouse') return;
+  const el=animOf(ev.target);if(!el) return;
+  press={el,t:performance.now()};animStart(el);
+});
+const endPress=ev=>{
+  if(!press) return;
+  if(ev.type==='pointerup'&&performance.now()-press.t>450){suppressClick=true;setTimeout(()=>{suppressClick=false},600)}
+  animStop(press.el);press=null;
+};
+document.addEventListener('pointerup',endPress);
+document.addEventListener('pointercancel',endPress);
+document.addEventListener('contextmenu',ev=>{if(ev.target.closest&&ev.target.closest(HOSTS)) ev.preventDefault()});
+
+let swiped=false;
+document.addEventListener('click',ev=>{
+  if(suppressClick){suppressClick=false;return}
+  const el=ev.target.closest('[data-lv],[data-split],[data-tick],.tile,[data-step],[data-open],[data-act],[data-cat]');
+  if(!el) return;
+  if(el.dataset.lv!=null){st.level=+el.dataset.lv;st.zap=0;st.prev=[];save();refresh(true);if(!$('#catalog').hidden) renderCatalog();return}
+  if(el.dataset.split){st.split=el.dataset.split;st.zap=0;st.prev=[];save();refresh(true);return}
+  if(el.dataset.tick!=null){if(swiped) return;markDone(view.items[+el.dataset.tick].ex.id);return}
+  if(el.classList.contains('tile')){if(swiped) return;const it=view.items[+el.dataset.i];openEx(it.ex.id,it.reason);return}
+  if(el.dataset.step!=null){const d=st.done[+el.dataset.step];if(d) openEx(d.id);return}
+  if(el.dataset.open){openEx(el.dataset.open);return}
+  if(el.dataset.cat){cat=el.dataset.cat;renderCatalog();$('#clist').scrollTop=0;return}
+  const act=el.dataset.act;
+  if(act==='done'){markDone(el.dataset.id);closeTo(0);return}
+  if(act==='remove'){const id=el.dataset.id;removeDone(id);closeSheet();toast(`הוסר מהמסלול: ${EX[id].he}`);return}
+  if(act==='reset'){reset();return}
+  if(act==='close'){closeSheet();return}
+});
+$('#zap').addEventListener('click',zap);
+$('#finish').addEventListener('click',openFinish);
+$('#openCat').addEventListener('click',openCatalog);
+$('#catClose').addEventListener('click',closeCatalog);
+$('#sheetClose').addEventListener('click',closeSheet);
+$('#scrim').addEventListener('click',ev=>{if(ev.target.id==='scrim') closeSheet()});
+$('#q').addEventListener('input',renderCatalog);
+$('#q').addEventListener('keydown',ev=>{if(ev.key==='Enter') ev.target.blur()});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&stack.length) closeTo(stack.length-1)});
+
+/* swipe the board sideways to zap */
+const board=$('#board');let sx=0,sy=0;
+board.addEventListener('touchstart',ev=>{const p=ev.touches[0];sx=p.clientX;sy=p.clientY},{passive:true});
+board.addEventListener('touchend',ev=>{
+  const p=ev.changedTouches[0],dx=p.clientX-sx,dy=p.clientY-sy;
+  if(Math.abs(dx)>60&&Math.abs(dy)<45){swiped=true;zap();setTimeout(()=>{swiped=false},400)}
+},{passive:true});
+
+/* drag the exercise sheet down to close it */
+const sheet=$('.sheet'),sbody=$('#sheetBody');let y0=null,dragging=false;
+sheet.addEventListener('touchstart',ev=>{
+  const fromTop=!!ev.target.closest('.sheet-top');
+  y0=(fromTop||sbody.scrollTop<=0)&&!ev.target.closest('.sheet-actions')?ev.touches[0].clientY:null;dragging=false;
+},{passive:true});
+sheet.addEventListener('touchmove',ev=>{
+  if(y0==null) return;
+  const d=ev.touches[0].clientY-y0;
+  if(!dragging&&d<-4){y0=null;return}
+  if(d>8){dragging=true;sheet.style.transition='none';sheet.style.transform=`translateY(${d}px)`;ev.preventDefault()}
+},{passive:false});
+sheet.addEventListener('touchend',ev=>{
+  if(y0==null) return;
+  const d=ev.changedTouches[0].clientY-y0;
+  sheet.style.transition='transform .2s ease';
+  if(dragging&&d>90){sheet.style.transform='translateY(100%)';setTimeout(()=>{sheet.style.transition='';closeSheet()},180)}
+  else sheet.style.transform='';
+  y0=null;dragging=false;
+});
+
+setInterval(()=>{const el=document.getElementById('elapsed');if(el) el.textContent=minutes()+' דק׳'},30000);
+
+refresh(false);
+
+})();
+</script>
+
+<div class="install" id="install" dir="rtl" lang="he" role="dialog" aria-labelledby="installText" hidden>
+  <p id="installText"></p>
+  <div class="install-actions"><button type="button" class="primary" id="installGo">התקן</button><button type="button" class="secondary" id="installLater">לא עכשיו</button></div>
+</div>
+<script>
+/* offline support, and a one-time offer to add the app to the home screen */
+if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+(function(){
+  const KEY='kf.install.dismissed';
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  let dismissed=false;try{dismissed=localStorage.getItem(KEY)==='1'}catch(e){}
+  if(standalone||dismissed) return;
+  const box=document.getElementById('install'),txt=document.getElementById('installText'),go=document.getElementById('installGo'),later=document.getElementById('installLater');
+  const hide=()=>{box.hidden=true;try{localStorage.setItem(KEY,'1')}catch(e){}};
+  later.onclick=hide;
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(ios){
+    txt.innerHTML='להתקנה באייפון: לחץ על כפתור השיתוף (ריבוע עם חץ למעלה) ובחר <b>הוסף למסך הבית</b>. האפליקציה תיפתח במסך מלא ותעבוד גם בלי אינטרנט.';
+    go.textContent='הבנתי';go.onclick=hide;later.hidden=true;
+    setTimeout(()=>{box.hidden=false},2500);return;
+  }
+  let deferred=null;
+  addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();deferred=ev;txt.textContent='אפשר להתקין את Keeping Fitt על הטלפון ולפתוח אותה כמו אפליקציה, גם בלי אינטרנט.';box.hidden=false});
+  go.onclick=async()=>{if(!deferred) return hide();deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;hide()};
+  addEventListener('appinstalled',hide);
+})();
+</script>
+</body>
+</html>
